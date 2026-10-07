@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>康复治疗学知识库</title>
+<style>
+:root{
+  --bg:#f5f7f9; --panel:#fff; --ink:#1f2d3d; --muted:#6b7a8c;
+  --line:#e2e8f0; --brand:#0f766e; --brand-soft:#ccfbf1; --accent:#c2410c;
+  --accent-soft:#ffedd5; --doc:#2563eb; --vid:#7c3aed; --shadow:0 1px 3px rgba(15,40,60,.06),0 4px 16px rgba(15,40,60,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.75;font-size:15px}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+
+header{position:sticky;top:0;z-index:50;background:linear-gradient(135deg,#0f766e,#115e59);color:#fff;padding:12px 20px;box-shadow:var(--shadow)}
+header h1{margin:0;font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px}
+header h1 .logo{width:26px;height:26px;background:#fff;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:#0f766e;font-weight:900;font-size:14px}
+.search-wrap{margin-top:8px;position:relative}
+.search-wrap input{width:100%;padding:8px 14px 8px 36px;border-radius:8px;border:none;font-size:14px;outline:none}
+.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#64748b}
+
+.wrap{display:flex;max-width:1500px;margin:0 auto;height:calc(100vh - 86px)}
+aside{width:290px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:10px 0}
+main{flex:1;overflow-y:auto;padding:24px 36px;min-width:0}
+
+.nav-group{margin-bottom:2px}
+.nav-top{padding:9px 16px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;border-left:3px solid transparent}
+.nav-top:hover{background:#f1f5f9}
+.nav-top .cnt{font-size:11px;color:var(--muted);font-weight:400;background:#eef2f7;padding:1px 7px;border-radius:10px}
+.nav-items{display:none}
+.nav-group.open .nav-items{display:block}
+.nav-group.open>.nav-top{border-left-color:var(--brand);background:var(--brand-soft)}
+.nav-sub{padding:6px 16px 6px 30px;font-size:13px;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:6px;border-left:3px solid transparent}
+.nav-sub:hover{background:#f0fdfa;color:var(--brand)}
+.nav-sub.active{border-left-color:var(--accent);background:#fff7ed;color:var(--accent);font-weight:600}
+.nav-sub .badge{margin-left:auto;font-size:10px;color:var(--muted);background:#f1f5f9;padding:1px 6px;border-radius:8px}
+
+/* 主视图 */
+.view{display:none}
+.view.active{display:block;animation:fade .2s}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+.home h2{color:var(--brand);border-bottom:3px solid var(--brand);padding-bottom:8px}
+.home .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:18px 0}
+.home .stat{background:#fff;padding:14px;border-radius:10px;border:1px solid var(--line);text-align:center}
+.home .stat .n{font-size:26px;font-weight:800;color:var(--brand)}
+.home .stat .l{font-size:12px;color:var(--muted);margin-top:4px}
+.home .tip{background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 6px 6px 0;font-size:13px;margin:14px 0}
+
+.topic-title{font-size:22px;font-weight:800;margin:4px 0 12px;padding-bottom:10px;border-bottom:3px solid var(--brand)}
+.topic-title .en{font-size:13px;color:var(--muted);font-weight:400;margin-left:10px}
+
+/* 知识点卡片 */
+.kp{background:#fff;border-radius:10px;padding:16px 20px;margin-bottom:14px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.kp h3{margin:0 0 8px;font-size:16px;color:var(--brand)}
+.kp h3 .tag{font-size:11px;font-weight:400;background:var(--brand-soft);color:var(--brand);padding:2px 8px;border-radius:10px;margin-left:6px}
+.kp h4{font-size:14px;margin:12px 0 6px;color:var(--accent)}
+.kp ul{margin:6px 0;padding-left:22px}
+.kp li{margin:3px 0}
+.kp .latest{background:var(--accent-soft);border-left:3px solid var(--accent);padding:8px 12px;border-radius:0 6px 6px 0;font-size:13px;margin-top:10px}
+.kp .latest b{color:var(--accent)}
+
+/* 文档阅读视图 */
+.doc-head{background:#fff;padding:16px 22px;border-radius:10px;border:1px solid var(--line);margin-bottom:14px}
+.doc-head .meta{font-size:12px;color:var(--muted);margin-top:6px}
+.doc-head .open-orig{display:inline-block;margin-top:8px;font-size:13px;background:var(--brand);color:#fff;padding:5px 12px;border-radius:6px}
+.doc-body{background:#fff;padding:24px 30px;border-radius:10px;border:1px solid var(--line);font-size:14.5px;line-height:1.9;white-space:pre-wrap;word-break:break-word;max-width:900px}
+.doc-body.scanned{background:#fffbeb;border:1px dashed #d97706}
+
+/* 文件链接列表 */
+.file-row{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:13px;border-bottom:1px dotted #f1f5f9}
+.file-row:last-child{border-bottom:0}
+.file-ico{width:22px;height:22px;flex-shrink:0;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700}
+.file-ico.doc{background:var(--doc)}
+.file-ico.video{background:var(--vid)}
+.file-ico.image{background:#059669}
+.file-row a{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-row .sz{font-size:11px;color:var(--muted);flex-shrink:0}
+.file-section{background:#fff;padding:14px 18px;border-radius:10px;border:1px solid var(--line);margin-bottom:12px}
+.file-section h4{margin:0 0 8px;color:var(--brand);font-size:14px}
+
+/* 搜索结果 */
+.search-hit{display:block;background:#fff;padding:12px 16px;border-radius:8px;margin-bottom:8px;border-left:3px solid var(--brand);cursor:pointer}
+.search-hit:hover{background:#f0fdfa}
+.search-hit .t{font-weight:600;font-size:14px}
+.search-hit .s{font-size:12px;color:var(--muted);margin-top:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* 移动端 */
+.menu-btn{display:none;position:fixed;left:12px;bottom:18px;z-index:60;background:var(--brand);color:#fff;border:none;width:46px;height:46px;border-radius:50%;font-size:20px;cursor:pointer;box-shadow:var(--shadow)}
+@media (max-width:900px){
+  aside{position:fixed;left:-300px;top:86px;bottom:0;z-index:40;transition:left .25s;box-shadow:4px 0 16px rgba(0,0,0,.1)}
+  aside.show{left:0}
+  main{padding:16px}
+  .menu-btn{display:block}
+  .dis-section{padding:14px !important}
+  #view-disease > div[style*="grid"]{grid-template-columns:1fr !important}
+}
+</style>
+</head>
+<body>
+
+<!-- 启动封面 -->
+<div id="splash" style="position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .6s;overflow:hidden">
+  <img src="cover.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:kenburns 20s ease-in-out infinite alternate" alt="">
+  <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2) 0%,rgba(0,0,0,.55) 100%)"></div>
+  <div style="position:relative;z-index:2;text-align:center;padding:20px;animation:fadeUp 1.2s ease-out">
+    <div style="font-size:13px;letter-spacing:10px;opacity:.85;margin-bottom:18px;animation:fadeUp 1.2s .2s both">REHABILITATION</div>
+    <h1 style="font-size:54px;font-weight:800;margin:0;letter-spacing:5px;text-shadow:0 4px 30px rgba(0,0,0,.7);animation:fadeUp 1.2s .4s both">康复治疗学知识库</h1>
+    <div style="width:0;height:2px;background:#fff;margin:22px auto;opacity:.8;animation:lineGrow 1s .8s forwards"></div>
+    <p style="opacity:.9;font-size:16px;margin:0 0 44px;text-shadow:0 2px 10px rgba(0,0,0,.6);animation:fadeUp 1.2s .9s both">解剖 · 评定 · 疾病 · 治疗技术</p>
+    <button onclick="enterApp()" style="padding:15px 60px;font-size:16px;letter-spacing:3px;background:rgba(255,255,255,.15);color:#fff;border:2px solid rgba(255,255,255,.8);border-radius:30px;cursor:pointer;backdrop-filter:blur(10px);transition:all .3s;animation:fadeUp 1.2s 1.1s both,pulse 2.5s 2s infinite" onmouseover="this.style.background='rgba(255,255,255,.4)';this.style.transform='scale(1.05)'" onmouseout="this.style.background='rgba(255,255,255,.15)';this.style.transform=''">进入知识库 →</button>
+  </div>
+</div>
+<style>
+@keyframes kenburns{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.12) translate(-1%,1%)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(25px)}to{opacity:1;transform:translateY(0)}}
+@keyframes lineGrow{to{width:80px}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.4)}50%{box-shadow:0 0 0 12px rgba(255,255,255,0)}}
+</style>
+
+<header>
+  <h1>康复治疗学知识库</h1>
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="search" type="text" placeholder="搜索…">
+  </div>
+</header>
+
+<button class="menu-btn" onclick="document.querySelector('aside').classList.toggle('show')">☰</button>
+
+<div class="wrap">
+  <aside id="nav"></aside>
+  <main id="main">
+    <div class="view active" id="view-home"></div>
+    <div class="view" id="view-kp"></div>
+    <div class="view" id="view-doc"></div>
+    <div class="view" id="view-files"></div>
+    <div class="view" id="view-search"></div>
+    <div class="view" id="view-disease"></div>
+    <div class="view" id="view-share"></div>
+    <div class="view" id="view-muscle"></div>
+    <div class="view" id="view-neuro"></div>
+    <div class="view" id="view-scales"></div>
+  </main>
+</div>
+
+<script>
+/* ===== 文件索引与文档正文数据 ===== */
+const FILES = {"Bobath合集": {"doc": [], "video": [{"rel": "Bobath合集\\2017年 bobath 新技术理论与操作19.6GB\\2017-03-06 130546(1).mov", "name": "2017-03-06 130546(1).mov", "sizeMB": 3193.0}, {"rel": "Bobath合集\\2017年 bobath 新技术理论与操作19.6GB\\2017-03-06 130546(2).mov", "name": "2017-03-06 130546(2).mov", "sizeMB": 3414.0}, {"rel": "Bobath合集\\2017年 bobath 新技术理论与操作19.6GB\\2017-03-06 130546(3).mov", "name": "2017-03-06 130546(3).mov", "sizeMB": 3176.8}, {"rel": "Bobath合集\\2017年 bobath 新技术理论与操作19.6GB\\2017-03-06 130546.mov", "name": "2017-03-06 130546.mov", "sizeMB": 3919.8}, {"rel": "Bobath合集\\2017年 bobath 新技术理论与操作19.6GB\\2017-03-06 152434(1).mov", "name": "2017-03-06 152434(1).mov", "sizeMB": 1784.0}, {"rel": "Bobath合集\\2017年 bobath 新技术理论与操作19.6GB\\2017-03-06 152434.mov", "name": "2017-03-06 152434.mov", "sizeMB": 1051.3}, {"rel": "Bobath合集\\2017年 bobath 新技术理论与操作19.6GB\\2017-03-06 171818.mov", "name": "2017-03-06 171818.mov", "sizeMB": 3580.9}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\2017-12-07 121043.mov", "name": "2017-12-07 121043.mov", "sizeMB": 1223.0}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\20171130_IMG_1784.MOV", "name": "20171130_IMG_1784.MOV", "sizeMB": 5760.5}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\20171130_IMG_1799.MOV", "name": "20171130_IMG_1799.MOV", "sizeMB": 731.8}, {"rel": "Bobath合集\\2017年常冬梅新BOBATH技术27GB\\VID20171125120313.mp4", "name": "VID20171125120313.mp4", "sizeMB": 446.5}, {"rel": "Bobath合集\\2017年常冬梅新BOBATH技术27GB\\VID20171125150411.mp4", "name": "VID20171125150411.mp4", "sizeMB": 1274.2}, {"rel": "Bobath合集\\2017年常冬梅新BOBATH技术27GB\\VID20171125152930.mp4", "name": "VID20171125152930.mp4", "sizeMB": 1160.7}, {"rel": "Bobath合集\\2017年常冬梅新BOBATH技术27GB\\VID20171125155225.mp4", "name": "VID20171125155225.mp4", "sizeMB": 66.0}, {"rel": "Bobath合集\\2017年常冬梅新BOBATH技术27GB\\VID20171125171543.mp4", "name": "VID20171125171543.mp4", "sizeMB": 652.7}, {"rel": "Bobath合集\\2017年常冬梅新BOBATH技术27GB\\偏瘫实训\\爱剪辑-img—2315——1.mp4", "name": "爱剪辑-img—2315——1.mp4", "sizeMB": 1075.2}, {"rel": "Bobath合集\\2017年常冬梅新BOBATH技术27GB\\偏瘫实训\\爱剪辑-img——2315——2.mp4", "name": "爱剪辑-img——2315——2.mp4", "sizeMB": 1294.3}, {"rel": "Bobath合集\\2018年中康Bobath在偏瘫的应用6.7G\\20180111_IMG_2181.MOV", "name": "20180111_IMG_2181.MOV", "sizeMB": 5190.9}, {"rel": "Bobath合集\\2018年中康Bobath在偏瘫的应用6.7G\\20180111_IMG_2182.MOV", "name": "20180111_IMG_2182.MOV", "sizeMB": 1342.4}, {"rel": "Bobath合集\\2018年中康Bobath在偏瘫的应用6.7G\\20180111_IMG_2183.MOV", "name": "20180111_IMG_2183.MOV", "sizeMB": 338.9}], "image": [{"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\2017-12-07 121123.jpg", "name": "2017-12-07 121123.jpg", "sizeMB": 1.1}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\2017-12-07 121132.jpg", "name": "2017-12-07 121132.jpg", "sizeMB": 1.1}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\2017-12-07 121410.jpg", "name": "2017-12-07 121410.jpg", "sizeMB": 1.2}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1720.JPG", "name": "20171130_IMG_1720.JPG", "sizeMB": 1.1}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1721.JPG", "name": "20171130_IMG_1721.JPG", "sizeMB": 1.1}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1722.JPG", "name": "20171130_IMG_1722.JPG", "sizeMB": 1.0}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1723.JPG", "name": "20171130_IMG_1723.JPG", "sizeMB": 1.1}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1724.JPG", "name": "20171130_IMG_1724.JPG", "sizeMB": 1.1}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1725.JPG", "name": "20171130_IMG_1725.JPG", "sizeMB": 1.1}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1727.JPG", "name": "20171130_IMG_1727.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1729.JPG", "name": "20171130_IMG_1729.JPG", "sizeMB": 0.6}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1730.JPG", "name": "20171130_IMG_1730.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1732.JPG", "name": "20171130_IMG_1732.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1733.JPG", "name": "20171130_IMG_1733.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1736.JPG", "name": "20171130_IMG_1736.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1738.JPG", "name": "20171130_IMG_1738.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1740.JPG", "name": "20171130_IMG_1740.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1741.JPG", "name": "20171130_IMG_1741.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1743.JPG", "name": "20171130_IMG_1743.JPG", "sizeMB": 0.6}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1744.JPG", "name": "20171130_IMG_1744.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1745.JPG", "name": "20171130_IMG_1745.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1747.JPG", "name": "20171130_IMG_1747.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1748.JPG", "name": "20171130_IMG_1748.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1749.JPG", "name": "20171130_IMG_1749.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1750.JPG", "name": "20171130_IMG_1750.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1751.JPG", "name": "20171130_IMG_1751.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1752.JPG", "name": "20171130_IMG_1752.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1753.JPG", "name": "20171130_IMG_1753.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1754.JPG", "name": "20171130_IMG_1754.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1755.JPG", "name": "20171130_IMG_1755.JPG", "sizeMB": 0.9}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1757.JPG", "name": "20171130_IMG_1757.JPG", "sizeMB": 0.9}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1759.JPG", "name": "20171130_IMG_1759.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1760.JPG", "name": "20171130_IMG_1760.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1762.JPG", "name": "20171130_IMG_1762.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1763.JPG", "name": "20171130_IMG_1763.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1766.JPG", "name": "20171130_IMG_1766.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1768.JPG", "name": "20171130_IMG_1768.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1769.JPG", "name": "20171130_IMG_1769.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1770.JPG", "name": "20171130_IMG_1770.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1771.JPG", "name": "20171130_IMG_1771.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1772.JPG", "name": "20171130_IMG_1772.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1773.JPG", "name": "20171130_IMG_1773.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1774.JPG", "name": "20171130_IMG_1774.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1775.JPG", "name": "20171130_IMG_1775.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1777.JPG", "name": "20171130_IMG_1777.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1778.JPG", "name": "20171130_IMG_1778.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1779.JPG", "name": "20171130_IMG_1779.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1781.JPG", "name": "20171130_IMG_1781.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1782.JPG", "name": "20171130_IMG_1782.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1783.JPG", "name": "20171130_IMG_1783.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1785.JPG", "name": "20171130_IMG_1785.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1786.JPG", "name": "20171130_IMG_1786.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1788.JPG", "name": "20171130_IMG_1788.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1790.JPG", "name": "20171130_IMG_1790.JPG", "sizeMB": 0.9}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1792.JPG", "name": "20171130_IMG_1792.JPG", "sizeMB": 0.9}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1793.JPG", "name": "20171130_IMG_1793.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1794.JPG", "name": "20171130_IMG_1794.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1795.JPG", "name": "20171130_IMG_1795.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1796.JPG", "name": "20171130_IMG_1796.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1797.JPG", "name": "20171130_IMG_1797.JPG", "sizeMB": 0.8}, {"rel": "Bobath合集\\2017年中康Bobath在脑瘫患者中的应用7.58G\\课件\\20171130_IMG_1798.JPG", "name": "20171130_IMG_1798.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2018年中康Bobath在偏瘫的应用6.7G\\20180111_IMG_2173.JPG", "name": "20180111_IMG_2173.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2018年中康Bobath在偏瘫的应用6.7G\\20180111_IMG_2174.JPG", "name": "20180111_IMG_2174.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2018年中康Bobath在偏瘫的应用6.7G\\20180111_IMG_2176.JPG", "name": "20180111_IMG_2176.JPG", "sizeMB": 0.6}, {"rel": "Bobath合集\\2018年中康Bobath在偏瘫的应用6.7G\\20180111_IMG_2177.JPG", "name": "20180111_IMG_2177.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2018年中康Bobath在偏瘫的应用6.7G\\20180111_IMG_2178.JPG", "name": "20180111_IMG_2178.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2018年中康Bobath在偏瘫的应用6.7G\\20180111_IMG_2179.JPG", "name": "20180111_IMG_2179.JPG", "sizeMB": 0.7}, {"rel": "Bobath合集\\2018年中康Bobath在偏瘫的应用6.7G\\20180111_IMG_2180.JPG", "name": "20180111_IMG_2180.JPG", "sizeMB": 0.6}]}, "PNF本体感觉神经肌肉促进技术": {"doc": [], "video": [{"rel": "PNF本体感觉神经肌肉促进技术\\01.PNF促进技术概论.ts", "name": "01.PNF促进技术概论.ts", "sizeMB": 71.1}, {"rel": "PNF本体感觉神经肌肉促进技术\\02.PNF基本程序.ts", "name": "02.PNF基本程序.ts", "sizeMB": 375.7}, {"rel": "PNF本体感觉神经肌肉促进技术\\03.PNF治疗技术.ts", "name": "03.PNF治疗技术.ts", "sizeMB": 796.6}, {"rel": "PNF本体感觉神经肌肉促进技术\\04.对患者的治疗.ts", "name": "04.对患者的治疗.ts", "sizeMB": 164.6}, {"rel": "PNF本体感觉神经肌肉促进技术\\05.促进的模式.ts", "name": "05.促进的模式.ts", "sizeMB": 119.4}, {"rel": "PNF本体感觉神经肌肉促进技术\\06.肩胛和骨盆.ts", "name": "06.肩胛和骨盆.ts", "sizeMB": 332.9}, {"rel": "PNF本体感觉神经肌肉促进技术\\07.上肢.ts", "name": "07.上肢.ts", "sizeMB": 453.1}, {"rel": "PNF本体感觉神经肌肉促进技术\\08.下肢.ts", "name": "08.下肢.ts", "sizeMB": 482.6}, {"rel": "PNF本体感觉神经肌肉促进技术\\09.颈部.ts", "name": "09.颈部.ts", "sizeMB": 125.0}, {"rel": "PNF本体感觉神经肌肉促进技术\\10.躯干.ts", "name": "10.躯干.ts", "sizeMB": 149.8}, {"rel": "PNF本体感觉神经肌肉促进技术\\11.垫上活动.ts", "name": "11.垫上活动.ts", "sizeMB": 78.8}, {"rel": "PNF本体感觉神经肌肉促进技术\\12.步态训练.ts", "name": "12.步态训练.ts", "sizeMB": 373.8}, {"rel": "PNF本体感觉神经肌肉促进技术\\13.PNF在面瘫、面部肌肉、舌的运动、吞咽、言语障碍、呼吸等方面的应用.ts", "name": "13.PNF在面瘫、面部肌肉、舌的运动、吞咽、言语障碍、呼吸等方面的应用.ts", "sizeMB": 552.6}], "image": []}, "作业治疗": {"doc": [], "video": [{"rel": "作业治疗\\作业治疗\\1.作业治疗技术概论\\01.作业治疗的基本概念.mp4", "name": "01.作业治疗的基本概念.mp4", "sizeMB": 14.8}, {"rel": "作业治疗\\作业治疗\\1.作业治疗技术概论\\02.作业活动的范畴新.mp4", "name": "02.作业活动的范畴新.mp4", "sizeMB": 50.4}, {"rel": "作业治疗\\作业治疗\\1.作业治疗技术概论\\03.作业治疗的发展简史新.mp4", "name": "03.作业治疗的发展简史新.mp4", "sizeMB": 45.1}, {"rel": "作业治疗\\作业治疗\\1.作业治疗技术概论\\04.CMOP实例分析——作业构成和作业情景2版.mp4", "name": "04.CMOP实例分析——作业构成和作业情景2版.mp4", "sizeMB": 32.0}, {"rel": "作业治疗\\作业治疗\\1.作业治疗技术概论\\05.CMOP实例分析——作业表现部分分析2版.mp4", "name": "05.CMOP实例分析——作业表现部分分析2版.mp4", "sizeMB": 46.8}, {"rel": "作业治疗\\作业治疗\\1.作业治疗技术概论\\06.MOHO模式的基本介绍2版.mp4", "name": "06.MOHO模式的基本介绍2版.mp4", "sizeMB": 70.5}, {"rel": "作业治疗\\作业治疗\\1.作业治疗技术概论\\07.人类作业模式——实例分析.mp4", "name": "07.人类作业模式——实例分析.mp4", "sizeMB": 72.6}, {"rel": "作业治疗\\作业治疗\\1.作业治疗技术概论\\08.人、环境、作业模式.mp4", "name": "08.人、环境、作业模式.mp4", "sizeMB": 17.6}, {"rel": "作业治疗\\作业治疗\\1.作业治疗技术概论\\09.作业治疗临床思维.mp4", "name": "09.作业治疗临床思维.mp4", "sizeMB": 20.3}, {"rel": "作业治疗\\作业治疗\\1.作业治疗技术概论\\10.作业治疗干预手段.mp4", "name": "10.作业治疗干预手段.mp4", "sizeMB": 11.2}, {"rel": "作业治疗\\作业治疗\\2.作业治疗的临床记录\\01.作业活动分析概述.mp4", "name": "01.作业活动分析概述.mp4", "sizeMB": 13.3}, {"rel": "作业治疗\\作业治疗\\2.作业治疗的临床记录\\02.作业活动分析步骤.mp4", "name": "02.作业活动分析步骤.mp4", "sizeMB": 20.2}, {"rel": "作业治疗\\作业治疗\\2.作业治疗的临床记录\\03.剪纸的作业活动分析.mp4", "name": "03.剪纸的作业活动分析.mp4", "sizeMB": 43.9}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\1.运动功能评估\\01.关节活动度评估.mp4", "name": "01.关节活动度评估.mp4", "sizeMB": 78.4}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\1.运动功能评估\\02.关节活动度评估.mp4", "name": "02.关节活动度评估.mp4", "sizeMB": 60.5}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\1.运动功能评估\\03.关节活动度评估.mp4", "name": "03.关节活动度评估.mp4", "sizeMB": 61.0}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\1.运动功能评估\\04.肌力肌耐力评估.mp4", "name": "04.肌力肌耐力评估.mp4", "sizeMB": 37.1}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\1.运动功能评估\\05.肌力肌耐力评估.mp4", "name": "05.肌力肌耐力评估.mp4", "sizeMB": 18.9}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\1.运动功能评估\\06.肌力肌耐力评估.mp4", "name": "06.肌力肌耐力评估.mp4", "sizeMB": 64.1}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\1.运动功能评估\\07.肌力肌耐力评估.mp4", "name": "07.肌力肌耐力评估.mp4", "sizeMB": 36.3}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\1.运动功能评估\\08.肌力肌耐力评估.mp4", "name": "08.肌力肌耐力评估.mp4", "sizeMB": 65.5}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\1.运动功能评估\\09.动作控制评估.mp4", "name": "09.动作控制评估.mp4", "sizeMB": 80.9}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\1.运动功能评估\\10.动作控制评估.mp4", "name": "10.动作控制评估.mp4", "sizeMB": 53.5}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\2.感觉与痛觉评估\\01.感觉评估.mp4", "name": "01.感觉评估.mp4", "sizeMB": 69.2}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\2.感觉与痛觉评估\\02.感觉评估.mp4", "name": "02.感觉评估.mp4", "sizeMB": 49.8}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\2.感觉与痛觉评估\\03.感觉评估.mp4", "name": "03.感觉评估.mp4", "sizeMB": 43.6}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\2.感觉与痛觉评估\\04.感觉评估.mp4", "name": "04.感觉评估.mp4", "sizeMB": 27.5}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\2.感觉与痛觉评估\\05.痛觉评估.mp4", "name": "05.痛觉评估.mp4", "sizeMB": 71.6}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\2.感觉与痛觉评估\\06.痛觉评估.mp4", "name": "06.痛觉评估.mp4", "sizeMB": 39.9}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\01.认识认知.mp4", "name": "01.认识认知.mp4", "sizeMB": 32.4}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\02.意识状态评估.mp4", "name": "02.意识状态评估.mp4", "sizeMB": 46.1}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\03.格拉斯哥昏迷评分量表评定.mp4", "name": "03.格拉斯哥昏迷评分量表评定.mp4", "sizeMB": 23.6}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\04.MMSE检查量表.mp4", "name": "04.MMSE检查量表.mp4", "sizeMB": 85.8}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\05.简易精神状态量表MMSE的操作.mp4", "name": "05.简易精神状态量表MMSE的操作.mp4", "sizeMB": 62.0}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\06.蒙特利尔量表（MOCA）的操作（上）.mp4", "name": "06.蒙特利尔量表（MOCA）的操作（上）.mp4", "sizeMB": 49.4}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\08.注意功能评估（1）.mp4", "name": "08.注意功能评估（1）.mp4", "sizeMB": 102.9}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\09.注意功能评估（2）.mp4", "name": "09.注意功能评估（2）.mp4", "sizeMB": 3.5}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\10.威斯康星卡片测试.mp4", "name": "10.威斯康星卡片测试.mp4", "sizeMB": 19.3}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\11.记忆和记忆障碍.mp4", "name": "11.记忆和记忆障碍.mp4", "sizeMB": 59.6}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\12.韦氏记忆量表的应用新.mp4", "name": "12.韦氏记忆量表的应用新.mp4", "sizeMB": 20.6}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\13.认识单侧忽略.mp4", "name": "13.认识单侧忽略.mp4", "sizeMB": 31.1}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\14.单侧忽略的评估.mp4", "name": "14.单侧忽略的评估.mp4", "sizeMB": 52.4}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\3.认知功能评定\\15.个人社会功能评估新.mp4", "name": "15.个人社会功能评估新.mp4", "sizeMB": 43.1}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\4.心理社会功能评估\\1.心理评估.mp4", "name": "1.心理评估.mp4", "sizeMB": 23.3}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\4.心理社会功能评估\\2.心理评估.mp4", "name": "2.心理评估.mp4", "sizeMB": 24.4}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\4.心理社会功能评估\\3.抑郁症表现.mp4", "name": "3.抑郁症表现.mp4", "sizeMB": 18.1}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\4.心理社会功能评估\\4.心理评定.mp4", "name": "4.心理评定.mp4", "sizeMB": 25.6}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\4.心理社会功能评估\\5.汉米尔顿焦虑量表.mp4", "name": "5.汉米尔顿焦虑量表.mp4", "sizeMB": 13.5}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\4.心理社会功能评估\\6.量表评定.mp4", "name": "6.量表评定.mp4", "sizeMB": 19.4}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\5.日常生活功能评估\\01.Barthel指数评定.mp4", "name": "01.Barthel指数评定.mp4", "sizeMB": 38.6}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\5.日常生活功能评估\\02.barthel量表操作终.mp4", "name": "02.barthel量表操作终.mp4", "sizeMB": 24.6}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\5.日常生活功能评估\\03.个人卫生评估.mp4", "name": "03.个人卫生评估.mp4", "sizeMB": 5.9}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\5.日常生活功能评估\\04.洗澡评估.mp4", "name": "04.洗澡评估.mp4", "sizeMB": 5.9}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\5.日常生活功能评估\\05.步行评估.mp4", "name": "05.步行评估.mp4", "sizeMB": 3.7}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\5.日常生活功能评估\\06.如厕评估.mp4", "name": "06.如厕评估.mp4", "sizeMB": 6.0}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\5.日常生活功能评估\\07.轮椅操控评估.mp4", "name": "07.轮椅操控评估.mp4", "sizeMB": 4.3}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\5.日常生活功能评估\\08.床椅转移评估.mp4", "name": "08.床椅转移评估.mp4", "sizeMB": 4.7}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\5.日常生活功能评估\\09.穿衣评估.mp4", "name": "09.穿衣评估.mp4", "sizeMB": 4.8}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\5.日常生活功能评估\\10.进食评估.mp4", "name": "10.进食评估.mp4", "sizeMB": 5.2}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\5.日常生活功能评估\\11.小便控制评估.mp4", "name": "11.小便控制评估.mp4", "sizeMB": 3.2}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\5.日常生活功能评估\\13.大便控制评估.mp4", "name": "13.大便控制评估.mp4", "sizeMB": 5.4}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\6.工作生产相关评估\\01.GULHEMP工作分析——工作分析基本情况.mp4", "name": "01.GULHEMP工作分析——工作分析基本情况.mp4", "sizeMB": 18.3}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\6.工作生产相关评估\\02.GULHEMP工作分析——案例分析.mp4", "name": "02.GULHEMP工作分析——案例分析.mp4", "sizeMB": 28.7}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\6.工作生产相关评估\\03.DOT-工作体能.mp4", "name": "03.DOT-工作体能.mp4", "sizeMB": 26.5}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\6.工作生产相关评估\\04.DOT-工作性向、气质和职责.mp4", "name": "04.DOT-工作性向、气质和职责.mp4", "sizeMB": 20.0}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\6.工作生产相关评估\\05.DOT-工作的特性.mp4", "name": "05.DOT-工作的特性.mp4", "sizeMB": 30.7}, {"rel": "作业治疗\\作业治疗\\3.作业治疗评估\\6.工作生产相关评估\\06.环境评估基本概念.mp4", "name": "06.环境评估基本概念.mp4", "sizeMB": 61.3}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\1.治疗性作业活动\\01.治疗性作业活动.mp4", "name": "01.治疗性作业活动.mp4", "sizeMB": 15.3}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\1.治疗性作业活动\\02.生产性活动.mp4", "name": "02.生产性活动.mp4", "sizeMB": 10.3}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\1.治疗性作业活动\\03.书写练习.mp4", "name": "03.书写练习.mp4", "sizeMB": 166.8}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\1.治疗性作业活动\\04.拼图游戏.mp4", "name": "04.拼图游戏.mp4", "sizeMB": 52.5}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\01.矫形器和支具的基础知识.mp4", "name": "01.矫形器和支具的基础知识.mp4", "sizeMB": 38.7}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\02.矫形器和支具的基础知识.mp4", "name": "02.矫形器和支具的基础知识.mp4", "sizeMB": 18.8}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\03.矫形器的分类.mp4", "name": "03.矫形器的分类.mp4", "sizeMB": 5.4}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\04.矫形器基本作用.mp4", "name": "04.矫形器基本作用.mp4", "sizeMB": 6.9}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\05.手功能位支具制作——画图.mp4", "name": "05.手功能位支具制作——画图.mp4", "sizeMB": 101.7}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\06.手功能位支具制作——板材取样.mp4", "name": "06.手功能位支具制作——板材取样.mp4", "sizeMB": 79.9}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\07.手功能位支具制作——固定.mp4", "name": "07.手功能位支具制作——固定.mp4", "sizeMB": 120.6}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\07.手功能位支具制作——塑形.mp4", "name": "07.手功能位支具制作——塑形.mp4", "sizeMB": 100.7}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\08.手舟骨支具制作-画图.mp4", "name": "08.手舟骨支具制作-画图.mp4", "sizeMB": 73.2}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\09.手舟骨支具制作-板材制作.mp4", "name": "09.手舟骨支具制作-板材制作.mp4", "sizeMB": 33.8}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\10.手舟骨支具制作-塑形.mp4", "name": "10.手舟骨支具制作-塑形.mp4", "sizeMB": 92.0}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\11.手舟骨支具制作-固定.mp4", "name": "11.手舟骨支具制作-固定.mp4", "sizeMB": 68.9}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\12.桡神经动力性支具——基底部分制作.mp4", "name": "12.桡神经动力性支具——基底部分制作.mp4", "sizeMB": 143.8}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\2.支具和矫形器\\13.桡神经动力性支具制作——动力配件部分制作.mp4", "name": "13.桡神经动力性支具制作——动力配件部分制作.mp4", "sizeMB": 93.5}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\3.辅助技术\\01.辅具基本介绍.mp4", "name": "01.辅具基本介绍.mp4", "sizeMB": 16.6}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\3.辅助技术\\02.辅具——轮椅坐垫介绍.mp4", "name": "02.辅具——轮椅坐垫介绍.mp4", "sizeMB": 62.3}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\3.辅助技术\\03.截瘫轮椅到床.mp4", "name": "03.截瘫轮椅到床.mp4", "sizeMB": 49.5}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\3.辅助技术\\04.床到轮椅转移.mp4", "name": "04.床到轮椅转移.mp4", "sizeMB": 9.3}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\3.辅助技术\\05.助行设备介绍.mp4", "name": "05.助行设备介绍.mp4", "sizeMB": 67.8}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\3.辅助技术\\06.助行器、轮椅的选配-助行器分类.mp4", "name": "06.助行器、轮椅的选配-助行器分类.mp4", "sizeMB": 7.4}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\4.环境改造\\01.社区的环境改造.mp4", "name": "01.社区的环境改造.mp4", "sizeMB": 22.0}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\4.环境改造\\02.环境改造.mp4", "name": "02.环境改造.mp4", "sizeMB": 60.2}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\4.环境改造\\03.环境改造.mp4", "name": "03.环境改造.mp4", "sizeMB": 15.0}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\5.日常生活活动训练\\01.进食功能训练.mp4", "name": "01.进食功能训练.mp4", "sizeMB": 11.2}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\5.日常生活活动训练\\02.穿衣功能训练.mp4", "name": "02.穿衣功能训练.mp4", "sizeMB": 138.1}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\5.日常生活活动训练\\03.修饰功能训练.mp4", "name": "03.修饰功能训练.mp4", "sizeMB": 62.7}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\5.日常生活活动训练\\04洗澡功能训练.mp4", "name": "04洗澡功能训练.mp4", "sizeMB": 37.2}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\5.日常生活活动训练\\05.转移活动训练.mp4", "name": "05.转移活动训练.mp4", "sizeMB": 151.4}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\5.日常生活活动训练\\06.转移活动训练.mp4", "name": "06.转移活动训练.mp4", "sizeMB": 5.3}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\5.日常生活活动训练\\07.工具性ADL训练.mp4", "name": "07.工具性ADL训练.mp4", "sizeMB": 14.2}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\6.团体治疗\\01.团体治疗的基本概念.mp4", "name": "01.团体治疗的基本概念.mp4", "sizeMB": 54.4}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\6.团体治疗\\02.团体治疗的功能.mp4", "name": "02.团体治疗的功能.mp4", "sizeMB": 32.4}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\6.团体治疗\\03.团体治疗的局限性、应用领域和治疗机制.mp4", "name": "03.团体治疗的局限性、应用领域和治疗机制.mp4", "sizeMB": 12.1}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\6.团体治疗\\04.团体治疗的过程.mp4", "name": "04.团体治疗的过程.mp4", "sizeMB": 24.9}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\6.团体治疗\\05.团体活动具体应用.mp4", "name": "05.团体活动具体应用.mp4", "sizeMB": 30.9}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\6.团体治疗\\06.团体活动——翻书记页.mp4", "name": "06.团体活动——翻书记页.mp4", "sizeMB": 95.1}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\6.团体治疗\\07.团体活动——识别游戏.mp4", "name": "07.团体活动——识别游戏.mp4", "sizeMB": 101.5}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\01.注意力手指体操.mp4", "name": "01.注意力手指体操.mp4", "sizeMB": 85.8}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\02.AD注意力和集中力训练.mp4", "name": "02.AD注意力和集中力训练.mp4", "sizeMB": 6.2}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\03.注意功能训练.mp4", "name": "03.注意功能训练.mp4", "sizeMB": 38.2}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\04.记忆力训练(上).mp4", "name": "04.记忆力训练(上).mp4", "sizeMB": 76.6}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\05.记忆力训练(下).mp4", "name": "05.记忆力训练(下).mp4", "sizeMB": 68.8}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\06.AD记忆功能训练.mp4", "name": "06.AD记忆功能训练.mp4", "sizeMB": 4.2}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\07.基本记忆方法（锁链法+联想法）.mp4", "name": "07.基本记忆方法（锁链法+联想法）.mp4", "sizeMB": 201.9}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\08.听觉失认训练.mp4", "name": "08.听觉失认训练.mp4", "sizeMB": 1.3}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\09.单侧忽略的训练.mp4", "name": "09.单侧忽略的训练.mp4", "sizeMB": 81.7}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\10.作与生产——职业的介绍.mp4", "name": "10.作与生产——职业的介绍.mp4", "sizeMB": 20.2}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\11.认识职业康复.mp4", "name": "11.认识职业康复.mp4", "sizeMB": 20.0}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\12.DOT-工作体能.mp4", "name": "12.DOT-工作体能.mp4", "sizeMB": 26.5}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\13.GULHEMP工作分析——工作分析基本情况.mp4", "name": "13.GULHEMP工作分析——工作分析基本情况.mp4", "sizeMB": 18.3}, {"rel": "作业治疗\\作业治疗\\4.作业治疗介入手段\\7.认知功能训练\\14.GULHEMP工作分析——案例分析.mp4", "name": "14.GULHEMP工作分析——案例分析.mp4", "sizeMB": 29.2}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\1.脑卒中作业治疗应用\\01.脑卒中的鉴别.mp4", "name": "01.脑卒中的鉴别.mp4", "sizeMB": 23.6}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\1.脑卒中作业治疗应用\\02.脑卒中的概述.mp4", "name": "02.脑卒中的概述.mp4", "sizeMB": 18.2}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\1.脑卒中作业治疗应用\\03.脑卒中的作业评估新.mp4", "name": "03.脑卒中的作业评估新.mp4", "sizeMB": 12.4}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\1.脑卒中作业治疗应用\\04.脑卒中作业治疗-体位摆放.mp4", "name": "04.脑卒中作业治疗-体位摆放.mp4", "sizeMB": 53.5}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\1.脑卒中作业治疗应用\\05.脑卒中作业治疗——关节被动活动.mp4", "name": "05.脑卒中作业治疗——关节被动活动.mp4", "sizeMB": 104.5}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\1.脑卒中作业治疗应用\\06.脑卒中作业治疗——肩关节半脱位处理.mp4", "name": "06.脑卒中作业治疗——肩关节半脱位处理.mp4", "sizeMB": 27.4}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\1.脑卒中作业治疗应用\\07.脑卒中作业治疗——翻身坐起练习.mp4", "name": "07.脑卒中作业治疗——翻身坐起练习.mp4", "sizeMB": 33.8}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\1.脑卒中作业治疗应用\\08.脑卒中的职能治疗.mp4", "name": "08.脑卒中的职能治疗.mp4", "sizeMB": 88.4}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\2.失智症作业治疗应用\\01.认知障碍自评表新.mp4", "name": "01.认知障碍自评表新.mp4", "sizeMB": 43.7}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\2.失智症作业治疗应用\\02.蒙特利尔量表（MOCA）的操作（上）.mp4", "name": "02.蒙特利尔量表（MOCA）的操作（上）.mp4", "sizeMB": 49.4}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\2.失智症作业治疗应用\\03.蒙特利尔量表（MOCA）的操作（下）.mp4", "name": "03.蒙特利尔量表（MOCA）的操作（下）.mp4", "sizeMB": 163.7}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\2.失智症作业治疗应用\\04.简易精神状态量表MMSE 2版.mp4", "name": "04.简易精神状态量表MMSE 2版.mp4", "sizeMB": 62.1}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\2.失智症作业治疗应用\\05.记忆力训练(上).mp4", "name": "05.记忆力训练(上).mp4", "sizeMB": 77.1}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\2.失智症作业治疗应用\\06.记忆力训练(下).mp4", "name": "06.记忆力训练(下).mp4", "sizeMB": 70.1}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\3.帕金森作业治疗应用\\01.巴金森病主要症狀介紹.mp4", "name": "01.巴金森病主要症狀介紹.mp4", "sizeMB": 41.0}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\3.帕金森作业治疗应用\\02.帕金森的作业治疗.mp4", "name": "02.帕金森的作业治疗.mp4", "sizeMB": 34.9}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\3.帕金森作业治疗应用\\03.帕金森的作业治疗.mp4", "name": "03.帕金森的作业治疗.mp4", "sizeMB": 50.4}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\3.帕金森作业治疗应用\\04.帕金森的作业治疗.mp4", "name": "04.帕金森的作业治疗.mp4", "sizeMB": 57.6}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\3.帕金森作业治疗应用\\05.帕金森患者的行动小贴士.mp4", "name": "05.帕金森患者的行动小贴士.mp4", "sizeMB": 47.2}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\4.手外伤作业治疗应用\\01.手外伤的概述.mp4", "name": "01.手外伤的概述.mp4", "sizeMB": 23.6}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\4.手外伤作业治疗应用\\02.手外伤的概述.mp4", "name": "02.手外伤的概述.mp4", "sizeMB": 37.8}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\4.手外伤作业治疗应用\\03.手外伤的作业评估.mp4", "name": "03.手外伤的作业评估.mp4", "sizeMB": 59.0}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\4.手外伤作业治疗应用\\04.手外伤的作业治疗.mp4", "name": "04.手外伤的作业治疗.mp4", "sizeMB": 26.9}, {"rel": "作业治疗\\作业治疗\\5.作业治疗的临床手段\\4.手外伤作业治疗应用\\05.手外伤的作业治疗.mp4", "name": "05.手外伤的作业治疗.mp4", "sizeMB": 12.8}, {"rel": "作业治疗\\日常生活自理\\作业治疗.mp4", "name": "作业治疗.mp4", "sizeMB": 581.6}], "image": []}, "川平法课程": {"doc": [{"rel": "川平法课程\\反复促通疗法（川平法）的理论与实践_宫本明，宫本陈敏主译2022年（彩图扫码看视频）.pdf", "name": "反复促通疗法（川平法）的理论与实践_宫本明，宫本陈敏主译2022年（彩图扫码看视频）.pdf", "sizeMB": 71.0}, {"rel": "川平法课程\\川平法PPT【上肢+下肢】\\反复促通疗法——川平法.pptx", "name": "反复促通疗法——川平法.pptx", "sizeMB": 1.7}, {"rel": "川平法课程\\川平法PPT【上肢+下肢】\\川平手法（上肢）.PPT", "name": "川平手法（上肢）.PPT", "sizeMB": 0.2}, {"rel": "川平法课程\\川平法PPT【上肢+下肢】\\川平手法（下肢）.PPT", "name": "川平手法（下肢）.PPT", "sizeMB": 0.1}], "video": [{"rel": "川平法课程\\川平手法【中文讲解版】.mp4", "name": "川平手法【中文讲解版】.mp4", "sizeMB": 262.6}, {"rel": "川平法课程\\【更新版】反复促通疗法.RFE.第一期训练营\\RFE并用疗法的原理与临床应用浅析1[2022-08-14].mp4", "name": "RFE并用疗法的原理与临床应用浅析1[2022-08-14].mp4", "sizeMB": 338.7}, {"rel": "川平法课程\\【更新版】反复促通疗法.RFE.第一期训练营\\RFE并用疗法的原理与临床应用浅析2[2022-08-14].mp4", "name": "RFE并用疗法的原理与临床应用浅析2[2022-08-14].mp4", "sizeMB": 165.8}, {"rel": "川平法课程\\【更新版】反复促通疗法.RFE.第一期训练营\\RFE手法原理[2022-08-12].mp4", "name": "RFE手法原理[2022-08-12].mp4", "sizeMB": 83.3}, {"rel": "川平法课程\\【更新版】反复促通疗法.RFE.第一期训练营\\RFE手法原理脑卒中康复机制[2022-08-12].mp4", "name": "RFE手法原理脑卒中康复机制[2022-08-12].mp4", "sizeMB": 211.4}, {"rel": "川平法课程\\【更新版】反复促通疗法.RFE.第一期训练营\\RFE技术上肢和下肢实操[2022-08-17].mp4", "name": "RFE技术上肢和下肢实操[2022-08-17].mp4", "sizeMB": 150.6}, {"rel": "川平法课程\\【更新版】反复促通疗法.RFE.第一期训练营\\RFE神经康复之基础[2022-08-11].mp4", "name": "RFE神经康复之基础[2022-08-11].mp4", "sizeMB": 109.0}, {"rel": "川平法课程\\【更新版】反复促通疗法.RFE.第一期训练营\\浅谈反复促通疗法[2022-08-10].mp4", "name": "浅谈反复促通疗法[2022-08-10].mp4", "sizeMB": 547.6}, {"rel": "川平法课程\\【更新版】反复促通疗法.RFE.第一期训练营\\脑卒中康复机制[2022-08-15].mp4", "name": "脑卒中康复机制[2022-08-15].mp4", "sizeMB": 117.5}, {"rel": "川平法课程\\【更新版】反复促通疗法.RFE.第一期训练营\\脑卒中康复机制[2022-08-16].mp4", "name": "脑卒中康复机制[2022-08-16].mp4", "sizeMB": 92.4}, {"rel": "川平法课程\\【更新版】反复促通疗法.RFE.第一期训练营\\配合RFE技术工具的选择与使用1[2022-08-13].mp4", "name": "配合RFE技术工具的选择与使用1[2022-08-13].mp4", "sizeMB": 179.0}, {"rel": "川平法课程\\【更新版】反复促通疗法.RFE.第一期训练营\\配合RFE技术工具的选择与使用2[2022-08-13].mp4", "name": "配合RFE技术工具的选择与使用2[2022-08-13].mp4", "sizeMB": 92.7}, {"rel": "川平法课程\\川平法【原版日本作者授课】\\00007_clip.mp4", "name": "00007_clip.mp4", "sizeMB": 15.8}, {"rel": "川平法课程\\川平法【原版日本作者授课】\\VTS_01_1.mp4", "name": "VTS_01_1.mp4", "sizeMB": 1024.0}, {"rel": "川平法课程\\川平法【原版日本作者授课】\\VTS_01_2.mp4", "name": "VTS_01_2.mp4", "sizeMB": 387.4}, {"rel": "川平法课程\\川平法【国内医院演示】\\前屈1.avi", "name": "前屈1.avi", "sizeMB": 53.0}, {"rel": "川平法课程\\川平法【国内医院演示】\\前屈2.avi", "name": "前屈2.avi", "sizeMB": 45.9}, {"rel": "川平法课程\\川平法【国内医院演示】\\前屈3.avi", "name": "前屈3.avi", "sizeMB": 52.4}, {"rel": "川平法课程\\川平法【国内医院演示】\\前屈4.avi", "name": "前屈4.avi", "sizeMB": 52.8}, {"rel": "川平法课程\\川平法【国内医院演示】\\前屈5.avi", "name": "前屈5.avi", "sizeMB": 69.9}, {"rel": "川平法课程\\川平法【国内医院演示】\\前臂旋前旋后.avi", "name": "前臂旋前旋后.avi", "sizeMB": 53.1}, {"rel": "川平法课程\\川平法【国内医院演示】\\外展外旋.avi", "name": "外展外旋.avi", "sizeMB": 55.9}, {"rel": "川平法课程\\川平法【国内医院演示】\\对掌.avi", "name": "对掌.avi", "sizeMB": 46.0}, {"rel": "川平法课程\\川平法【国内医院演示】\\屈曲模式1.avi", "name": "屈曲模式1.avi", "sizeMB": 50.7}, {"rel": "川平法课程\\川平法【国内医院演示】\\屈曲模式2.avi", "name": "屈曲模式2.avi", "sizeMB": 48.1}, {"rel": "川平法课程\\川平法【国内医院演示】\\屈膝1.avi", "name": "屈膝1.avi", "sizeMB": 43.7}, {"rel": "川平法课程\\川平法【国内医院演示】\\屈膝2.avi", "name": "屈膝2.avi", "sizeMB": 44.6}, {"rel": "川平法课程\\川平法【国内医院演示】\\屈髋伸髋.avi", "name": "屈髋伸髋.avi", "sizeMB": 52.1}, {"rel": "川平法课程\\川平法【国内医院演示】\\手指伸展.avi", "name": "手指伸展.avi", "sizeMB": 42.7}, {"rel": "川平法课程\\川平法【国内医院演示】\\手指屈曲.avi", "name": "手指屈曲.avi", "sizeMB": 53.1}, {"rel": "川平法课程\\川平法【国内医院演示】\\手腕1.avi", "name": "手腕1.avi", "sizeMB": 49.9}, {"rel": "川平法课程\\川平法【国内医院演示】\\手腕2.avi", "name": "手腕2.avi", "sizeMB": 57.5}, {"rel": "川平法课程\\川平法【国内医院演示】\\肘屈.avi", "name": "肘屈.avi", "sizeMB": 73.2}, {"rel": "川平法课程\\川平法【国内医院演示】\\肩胛骨.avi", "name": "肩胛骨.avi", "sizeMB": 47.6}, {"rel": "川平法课程\\川平法【国内医院演示】\\踝背屈.avi", "name": "踝背屈.avi", "sizeMB": 48.3}, {"rel": "川平法课程\\川平法【国内医院演示】\\髋内外旋.avi", "name": "髋内外旋.avi", "sizeMB": 55.8}], "image": []}, "康复治疗学": {"doc": [{"rel": "康复治疗学\\2022-2023年康复治疗学期末试卷及答案-人体发育学(康复治疗学).pdf", "name": "2022-2023年康复治疗学期末试卷及答案-人体发育学(康复治疗学).pdf", "sizeMB": 0.3}, {"rel": "康复治疗学\\2022-2023年康复治疗学期末试卷及答案-人体运动学(康复治疗学).pdf", "name": "2022-2023年康复治疗学期末试卷及答案-人体运动学(康复治疗学).pdf", "sizeMB": 0.2}, {"rel": "康复治疗学\\【三基】康复治疗学简答题(一).docx", "name": "【三基】康复治疗学简答题(一).docx", "sizeMB": 0.0}, {"rel": "康复治疗学\\【三基】康复治疗学重要名词解释(一).docx", "name": "【三基】康复治疗学重要名词解释(一).docx", "sizeMB": 0.0}, {"rel": "康复治疗学\\【三基】康复治疗学重要名词解释(二).docx", "name": "【三基】康复治疗学重要名词解释(二).docx", "sizeMB": 0.0}, {"rel": "康复治疗学\\中医肿瘤康复治疗学考核试题及答案.pdf", "name": "中医肿瘤康复治疗学考核试题及答案.pdf", "sizeMB": 1.2}, {"rel": "康复治疗学\\康复治疗学复习重点.pdf", "name": "康复治疗学复习重点.pdf", "sizeMB": 2.6}, {"rel": "康复治疗学\\康复治疗学知识汇总总结.pdf", "name": "康复治疗学知识汇总总结.pdf", "sizeMB": 2.6}, {"rel": "康复治疗学\\康复治疗学知识点.pdf", "name": "康复治疗学知识点.pdf", "sizeMB": 2.4}, {"rel": "康复治疗学\\康复治疗学考试试卷及答案.pdf", "name": "康复治疗学考试试卷及答案.pdf", "sizeMB": 0.1}, {"rel": "康复治疗学\\康复治疗学试题及答案58页.pdf", "name": "康复治疗学试题及答案58页.pdf", "sizeMB": 8.3}, {"rel": "康复治疗学\\现代康复治疗技术考试题库(含答案)176页.pdf", "name": "现代康复治疗技术考试题库(含答案)176页.pdf", "sizeMB": 3.7}], "video": [], "image": []}, "康复的书": {"doc": [{"rel": "康复的书\\352 运动损伤临床指南_高宗玄2007译（全彩色）.pdf", "name": "352 运动损伤临床指南_高宗玄2007译（全彩色）.pdf", "sizeMB": 121.5}, {"rel": "康复的书\\540—运动损伤——运动伤害图解圣经：预防、诊断、治疗、复健 ON.pdf", "name": "540—运动损伤——运动伤害图解圣经：预防、诊断、治疗、复健 ON.pdf", "sizeMB": 43.0}, {"rel": "康复的书\\CMSA Manual and Score Form.pdf", "name": "CMSA Manual and Score Form.pdf", "sizeMB": 0.1}, {"rel": "康复的书\\中国康复医学（第二版）.docx", "name": "中国康复医学（第二版）.docx", "sizeMB": 20.7}, {"rel": "康复的书\\中国康复医学（第二版）.pdf", "name": "中国康复医学（第二版）.pdf", "sizeMB": 49.5}, {"rel": "康复的书\\体能训练设计指南--美国翻译版0.pdf", "name": "体能训练设计指南--美国翻译版0.pdf", "sizeMB": 661.9}, {"rel": "康复的书\\动态拉伸训练--创新热身方法提高肌肉力量强化动作技术增加动作幅度--美国翻译版0.pdf", "name": "动态拉伸训练--创新热身方法提高肌肉力量强化动作技术增加动作幅度--美国翻译版0.pdf", "sizeMB": 200.5}, {"rel": "康复的书\\实用PNF治疗  本体感觉神经肌肉促进技术  图解指南  第4版_14345498.pdf", "name": "实用PNF治疗  本体感觉神经肌肉促进技术  图解指南  第4版_14345498.pdf", "sizeMB": 36.8}, {"rel": "康复的书\\循序渐进+偏瘫患者的全面康复治疗（第2版）....pdf", "name": "循序渐进+偏瘫患者的全面康复治疗（第2版）....pdf", "sizeMB": 102.8}, {"rel": "康复的书\\核心区训练--改善身体及生活的革命式训练方案--美国翻译版0.pdf", "name": "核心区训练--改善身体及生活的革命式训练方案--美国翻译版0.pdf", "sizeMB": 506.6}, {"rel": "康复的书\\灵敏训练-美国翻译版0.pdf", "name": "灵敏训练-美国翻译版0.pdf", "sizeMB": 512.2}, {"rel": "康复的书\\美国国家体能协会 NSCA体能训练概论 ON.pdf", "name": "美国国家体能协会 NSCA体能训练概论 ON.pdf", "sizeMB": 171.2}, {"rel": "康复的书\\美国国家体能协会私人教练基础.pdf", "name": "美国国家体能协会私人教练基础.pdf", "sizeMB": 91.4}, {"rel": "康复的书\\运动员恢复指南--休息放松储备能量达到最佳竞技状态--美国翻译版0.pdf", "name": "运动员恢复指南--休息放松储备能量达到最佳竞技状态--美国翻译版0.pdf", "sizeMB": 439.6}, {"rel": "康复的书\\运动员的时钟-生物学和时间因素如何影响运动表现--外国翻译0.pdf", "name": "运动员的时钟-生物学和时间因素如何影响运动表现--外国翻译0.pdf", "sizeMB": 621.2}, {"rel": "康复的书\\运动康复指导.初级_邹志红，林科宇主编_2023年（彩图超清）(1).pdf", "name": "运动康复指导.初级_邹志红，林科宇主编_2023年（彩图超清）(1).pdf", "sizeMB": 201.5}, {"rel": "康复的书\\运动损伤康复治疗学【王予彬】【人民军医出版社 】【 2009-7】.pdf", "name": "运动损伤康复治疗学【王予彬】【人民军医出版社 】【 2009-7】.pdf", "sizeMB": 116.9}, {"rel": "康复的书\\运动损伤的治疗与康复.pdf", "name": "运动损伤的治疗与康复.pdf", "sizeMB": 23.9}, {"rel": "康复的书\\运动损伤的评估与康复训练全书 全彩图解版 【英】莫琳·拉芬斯珀格  著 2023年_7.pdf", "name": "运动损伤的评估与康复训练全书 全彩图解版 【英】莫琳·拉芬斯珀格  著 2023年_7.pdf", "sizeMB": 559.3}, {"rel": "康复的书\\集体性项目的体能训练--高水平竞技运动的专项身体准备（第二版）--美国翻译版0.pdf", "name": "集体性项目的体能训练--高水平竞技运动的专项身体准备（第二版）--美国翻译版0.pdf", "sizeMB": 837.7}], "video": [], "image": []}, "康复视频": {"doc": [], "video": [{"rel": "康复视频\\SVID_20250811_200031_1.mp4", "name": "SVID_20250811_200031_1.mp4", "sizeMB": 104.9}, {"rel": "康复视频\\SVID_20250811_200643_1.mp4", "name": "SVID_20250811_200643_1.mp4", "sizeMB": 126.8}, {"rel": "康复视频\\SVID_20250814_193151_1.mp4", "name": "SVID_20250814_193151_1.mp4", "sizeMB": 227.4}, {"rel": "康复视频\\SVID_20250814_200520_1.mp4", "name": "SVID_20250814_200520_1.mp4", "sizeMB": 33.9}, {"rel": "康复视频\\三角肌三级力量训练.mp4", "name": "三角肌三级力量训练.mp4", "sizeMB": 10.9}, {"rel": "康复视频\\三角肌水平外展力量训练.mp4", "name": "三角肌水平外展力量训练.mp4", "sizeMB": 12.0}, {"rel": "康复视频\\伸肘肌力训练.mp4", "name": "伸肘肌力训练.mp4", "sizeMB": 12.1}, {"rel": "康复视频\\伸膝动作训练.mp4", "name": "伸膝动作训练.mp4", "sizeMB": 14.2}, {"rel": "康复视频\\作业疗法.mp4", "name": "作业疗法.mp4", "sizeMB": 949.1}, {"rel": "康复视频\\偏瘫.mp4", "name": "偏瘫.mp4", "sizeMB": 327.9}, {"rel": "康复视频\\偏瘫患者行走训练.mp4", "name": "偏瘫患者行走训练.mp4", "sizeMB": 21.7}, {"rel": "康复视频\\卧位到坐位训练.mp4", "name": "卧位到坐位训练.mp4", "sizeMB": 39.5}, {"rel": "康复视频\\双髋关节分离动作训练.mp4", "name": "双髋关节分离动作训练.mp4", "sizeMB": 10.5}, {"rel": "康复视频\\右腿负重站立训练.mp4", "name": "右腿负重站立训练.mp4", "sizeMB": 26.6}, {"rel": "康复视频\\吞咽训练.mp4", "name": "吞咽训练.mp4", "sizeMB": 27.3}, {"rel": "康复视频\\周围神经损伤.mp4", "name": "周围神经损伤.mp4", "sizeMB": 1514.4}, {"rel": "康复视频\\坐位平衡训练.mp4", "name": "坐位平衡训练.mp4", "sizeMB": 66.9}, {"rel": "康复视频\\多系统萎缩.mp4", "name": "多系统萎缩.mp4", "sizeMB": 118.7}, {"rel": "康复视频\\大拇指伸展.mp4", "name": "大拇指伸展.mp4", "sizeMB": 15.0}, {"rel": "康复视频\\小拇指对指训练.mp4", "name": "小拇指对指训练.mp4", "sizeMB": 13.2}, {"rel": "康复视频\\屈肘伸腕伸肘训练.mp4", "name": "屈肘伸腕伸肘训练.mp4", "sizeMB": 36.2}, {"rel": "康复视频\\屈髋动作诱发训练.mp4", "name": "屈髋动作诱发训练.mp4", "sizeMB": 11.7}, {"rel": "康复视频\\屈髋动作诱发训练二.mp4", "name": "屈髋动作诱发训练二.mp4", "sizeMB": 9.6}, {"rel": "康复视频\\屈髋屈膝.mp4", "name": "屈髋屈膝.mp4", "sizeMB": 11.5}, {"rel": "康复视频\\床上桥式运动训练.mp4", "name": "床上桥式运动训练.mp4", "sizeMB": 18.9}, {"rel": "康复视频\\床边屈髋训练.mp4", "name": "床边屈髋训练.mp4", "sizeMB": 13.0}, {"rel": "康复视频\\患侧负重.mp4", "name": "患侧负重.mp4", "sizeMB": 27.8}, {"rel": "康复视频\\手指的外展与内收.mp4", "name": "手指的外展与内收.mp4", "sizeMB": 22.0}, {"rel": "康复视频\\手腕屈伸.mp4", "name": "手腕屈伸.mp4", "sizeMB": 18.0}, {"rel": "康复视频\\手腕旋转.mp4", "name": "手腕旋转.mp4", "sizeMB": 12.6}, {"rel": "康复视频\\拇指外展.mp4", "name": "拇指外展.mp4", "sizeMB": 13.0}, {"rel": "康复视频\\拇指对指.mp4", "name": "拇指对指.mp4", "sizeMB": 14.9}, {"rel": "康复视频\\掌指关节伸展.mp4", "name": "掌指关节伸展.mp4", "sizeMB": 11.0}, {"rel": "康复视频\\旋前旋后.mp4", "name": "旋前旋后.mp4", "sizeMB": 31.4}, {"rel": "康复视频\\桡侧翘腕.mp4", "name": "桡侧翘腕.mp4", "sizeMB": 10.6}, {"rel": "康复视频\\植物人.mp4", "name": "植物人.mp4", "sizeMB": 159.7}, {"rel": "康复视频\\植物人促醒.mp4", "name": "植物人促醒.mp4", "sizeMB": 249.2}, {"rel": "康复视频\\植物状态最小意识.mp4", "name": "植物状态最小意识.mp4", "sizeMB": 249.8}, {"rel": "康复视频\\病人嘴张不开.mp4", "name": "病人嘴张不开.mp4", "sizeMB": 117.4}, {"rel": "康复视频\\站立平衡.mp4", "name": "站立平衡.mp4", "sizeMB": 45.1}, {"rel": "康复视频\\纠正膝过深训练.mp4", "name": "纠正膝过深训练.mp4", "sizeMB": 15.0}, {"rel": "康复视频\\股四头肌三级力量训练.mp4", "name": "股四头肌三级力量训练.mp4", "sizeMB": 11.9}, {"rel": "康复视频\\股四头肌肌力训练.mp4", "name": "股四头肌肌力训练.mp4", "sizeMB": 11.7}, {"rel": "康复视频\\肩前屈控制训练.mp4", "name": "肩前屈控制训练.mp4", "sizeMB": 11.6}, {"rel": "康复视频\\肩前屈诱发训练.mp4", "name": "肩前屈诱发训练.mp4", "sizeMB": 8.8}, {"rel": "康复视频\\肩周炎肩痛时如何缓解.mp4", "name": "肩周炎肩痛时如何缓解.mp4", "sizeMB": 15.2}, {"rel": "康复视频\\肱二头肌肌力训练.mp4", "name": "肱二头肌肌力训练.mp4", "sizeMB": 12.1}, {"rel": "康复视频\\脊髓损伤.mp4", "name": "脊髓损伤.mp4", "sizeMB": 1380.8}, {"rel": "康复视频\\脊髓损伤长坐位四级平衡训练.mp4", "name": "脊髓损伤长坐位四级平衡训练.mp4", "sizeMB": 20.8}, {"rel": "康复视频\\脑中风语言锻炼.mp4", "name": "脑中风语言锻炼.mp4", "sizeMB": 142.6}, {"rel": "康复视频\\脑出血+40ml+右上肢偏瘫+后遗症肩部、臂部、手部锻炼视频。000.mp4", "name": "脑出血+40ml+右上肢偏瘫+后遗症肩部、臂部、手部锻炼视频。000.mp4", "sizeMB": 98.7}, {"rel": "康复视频\\脑出血+70ml+左侧肢体偏瘫+后遗症手部锻炼视频--------x.mp4", "name": "脑出血+70ml+左侧肢体偏瘫+后遗症手部锻炼视频--------x.mp4", "sizeMB": 99.9}, {"rel": "康复视频\\脑出血+蛛网膜+半醒微意识想动动不了-1.mp4", "name": "脑出血+蛛网膜+半醒微意识想动动不了-1.mp4", "sizeMB": 346.8}, {"rel": "康复视频\\脑出血.mp4", "name": "脑出血.mp4", "sizeMB": 1562.0}, {"rel": "康复视频\\脑出血吞咽功能训练--.mp4", "name": "脑出血吞咽功能训练--.mp4", "sizeMB": 121.2}, {"rel": "康复视频\\脑出血术后手脚无力，如何锻-----.mp4", "name": "脑出血术后手脚无力，如何锻-----.mp4", "sizeMB": 49.9}, {"rel": "康复视频\\脑出血语言锻炼.mp4", "name": "脑出血语言锻炼.mp4", "sizeMB": 196.9}, {"rel": "康复视频\\脑瘫.mp4", "name": "脑瘫.mp4", "sizeMB": 200.6}, {"rel": "康复视频\\脚背屈训练.mp4", "name": "脚背屈训练.mp4", "sizeMB": 34.1}, {"rel": "康复视频\\腕分离牵拉训练.mp4", "name": "腕分离牵拉训练.mp4", "sizeMB": 24.4}, {"rel": "康复视频\\腕背伸.mp4", "name": "腕背伸.mp4", "sizeMB": 8.7}, {"rel": "康复视频\\腘绳肌肌力训练.mp4", "name": "腘绳肌肌力训练.mp4", "sizeMB": 9.5}, {"rel": "康复视频\\臀中肌力量训练.mp4", "name": "臀中肌力量训练.mp4", "sizeMB": 10.5}, {"rel": "康复视频\\臀大肌肌力诱发训练.mp4", "name": "臀大肌肌力诱发训练.mp4", "sizeMB": 11.6}, {"rel": "康复视频\\言语.mp4", "name": "言语.mp4", "sizeMB": 357.4}, {"rel": "康复视频\\言语训练.mp4", "name": "言语训练.mp4", "sizeMB": 37.6}, {"rel": "康复视频\\认知能力与理解能力训练.mp4", "name": "认知能力与理解能力训练.mp4", "sizeMB": 14.7}, {"rel": "康复视频\\诱发手指分离.mp4", "name": "诱发手指分离.mp4", "sizeMB": 17.3}, {"rel": "康复视频\\诱发握拳动作.mp4", "name": "诱发握拳动作.mp4", "sizeMB": 11.0}, {"rel": "康复视频\\诱发肘分离训练.mp4", "name": "诱发肘分离训练.mp4", "sizeMB": 9.3}, {"rel": "康复视频\\诱发肩胛分离训练.mp4", "name": "诱发肩胛分离训练.mp4", "sizeMB": 9.0}, {"rel": "康复视频\\降低内收肌张力训练.mp4", "name": "降低内收肌张力训练.mp4", "sizeMB": 15.6}, {"rel": "康复视频\\降低小腿三头肌肌张力训练.mp4", "name": "降低小腿三头肌肌张力训练.mp4", "sizeMB": 15.6}, {"rel": "康复视频\\降低腘绳肌张力训练.mp4", "name": "降低腘绳肌张力训练.mp4", "sizeMB": 15.4}, {"rel": "康复视频\\颈椎病肩部训练.mp4", "name": "颈椎病肩部训练.mp4", "sizeMB": 291.4}, {"rel": "康复视频\\颈椎病颈部训练.mp4", "name": "颈椎病颈部训练.mp4", "sizeMB": 237.2}, {"rel": "康复视频\\骨盆分离训练.mp4", "name": "骨盆分离训练.mp4", "sizeMB": 18.4}, {"rel": "康复视频\\髋外展诱发训练.mp4", "name": "髋外展诱发训练.mp4", "sizeMB": 15.1}, {"rel": "康复视频\\高位截瘫翻身训练.mp4", "name": "高位截瘫翻身训练.mp4", "sizeMB": 32.1}, {"rel": "康复视频\\高位截瘫长坐位平衡训练.mp4", "name": "高位截瘫长坐位平衡训练.mp4", "sizeMB": 49.8}], "image": []}, "康复评定": {"doc": [{"rel": "康复评定\\Barthel指数.docx", "name": "Barthel指数.docx", "sizeMB": 0.0}, {"rel": "康复评定\\Bender Gestalt图形.docx", "name": "Bender Gestalt图形.docx", "sizeMB": 0.1}, {"rel": "康复评定\\BI-100(改良).docx", "name": "BI-100(改良).docx", "sizeMB": 0.0}, {"rel": "康复评定\\Carr平衡功能评定法.docx", "name": "Carr平衡功能评定法.docx", "sizeMB": 0.0}, {"rel": "康复评定\\FIM评估.docx", "name": "FIM评估.docx", "sizeMB": 0.0}, {"rel": "康复评定\\Fugl-Meyer评定法.docx", "name": "Fugl-Meyer评定法.docx", "sizeMB": 0.0}, {"rel": "康复评定\\Gesell图形试验.docx", "name": "Gesell图形试验.docx", "sizeMB": 0.0}, {"rel": "康复评定\\MMT.docx", "name": "MMT.docx", "sizeMB": 0.6}, {"rel": "康复评定\\Rey Os-terrieth复杂图形.docx", "name": "Rey Os-terrieth复杂图形.docx", "sizeMB": 0.0}, {"rel": "康复评定\\ROM.docx", "name": "ROM.docx", "sizeMB": 0.4}, {"rel": "康复评定\\WeeFIM.docx", "name": "WeeFIM.docx", "sizeMB": 0.6}, {"rel": "康复评定\\上田氏平衡反应试验.docx", "name": "上田氏平衡反应试验.docx", "sizeMB": 0.1}, {"rel": "康复评定\\失语症失语类型.docx", "name": "失语症失语类型.docx", "sizeMB": 0.5}, {"rel": "康复评定\\康复评定.docx", "name": "康复评定.docx", "sizeMB": 0.1}, {"rel": "康复评定\\徒手肌力的评定.docx", "name": "徒手肌力的评定.docx", "sizeMB": 0.8}, {"rel": "康复评定\\新建 DOCX 文档 (2).docx", "name": "新建 DOCX 文档 (2).docx", "sizeMB": 15.9}, {"rel": "康复评定\\新建 DOCX 文档.docx", "name": "新建 DOCX 文档.docx", "sizeMB": 20.2}, {"rel": "康复评定\\物理因子治疗.docx", "name": "物理因子治疗.docx", "sizeMB": 0.0}, {"rel": "康复评定\\老年人身体移动量表(EMS).docx", "name": "老年人身体移动量表(EMS).docx", "sizeMB": 0.2}, {"rel": "康复评定\\脊髓.docx", "name": "脊髓.docx", "sizeMB": 1.9}, {"rel": "康复评定\\膝关节功能评价记录表.docx", "name": "膝关节功能评价记录表.docx", "sizeMB": 0.0}, {"rel": "康复评定\\西方失语症成套测验.docx", "name": "西方失语症成套测验.docx", "sizeMB": 0.6}, {"rel": "康复评定\\运动疗法.docx", "name": "运动疗法.docx", "sizeMB": 0.0}, {"rel": "康复评定\\髋关节功能评定.docx", "name": "髋关节功能评定.docx", "sizeMB": 0.2}], "video": [{"rel": "康复评定\\01.偏瘫步态分析.mp4", "name": "01.偏瘫步态分析.mp4", "sizeMB": 28.3}, {"rel": "康复评定\\02.协调与平衡的评定.mp4", "name": "02.协调与平衡的评定.mp4", "sizeMB": 178.9}, {"rel": "康复评定\\03.肌力的评定.mp4", "name": "03.肌力的评定.mp4", "sizeMB": 493.1}, {"rel": "康复评定\\04.简化Fuglmeyer运动功能评定.mp4", "name": "04.简化Fuglmeyer运动功能评定.mp4", "sizeMB": 138.0}, {"rel": "康复评定\\05.关节活动度测量.mp4", "name": "05.关节活动度测量.mp4", "sizeMB": 181.6}], "image": []}, "步态评估（初阶）": {"doc": [], "video": [{"rel": "步态评估（初阶）\\内外八字.mp4", "name": "内外八字.mp4", "sizeMB": 19.0}, {"rel": "步态评估（初阶）\\屈髋肌无力.mp4", "name": "屈髋肌无力.mp4", "sizeMB": 35.0}, {"rel": "步态评估（初阶）\\摇摆木马步态.mp4", "name": "摇摆木马步态.mp4", "sizeMB": 21.7}, {"rel": "步态评估（初阶）\\步幅缩短.mp4", "name": "步幅缩短.mp4", "sizeMB": 21.4}, {"rel": "步态评估（初阶）\\步态总论.mp4", "name": "步态总论.mp4", "sizeMB": 43.6}, {"rel": "步态评估（初阶）\\膝关节内翻.mp4", "name": "膝关节内翻.mp4", "sizeMB": 18.9}, {"rel": "步态评估（初阶）\\膝关节屈曲.mp4", "name": "膝关节屈曲.mp4", "sizeMB": 19.9}, {"rel": "步态评估（初阶）\\膝关节过伸.mp4", "name": "膝关节过伸.mp4", "sizeMB": 47.2}, {"rel": "步态评估（初阶）\\臀大肌无力步态.mp4", "name": "臀大肌无力步态.mp4", "sizeMB": 54.9}, {"rel": "步态评估（初阶）\\跨阈步态.mp4", "name": "跨阈步态.mp4", "sizeMB": 47.5}, {"rel": "步态评估（初阶）\\跳跃步态.mp4", "name": "跳跃步态.mp4", "sizeMB": 24.5}, {"rel": "步态评估（初阶）\\马蹄足畸形.mp4", "name": "马蹄足畸形.mp4", "sizeMB": 48.1}, {"rel": "步态评估（初阶）\\髋回旋上提.mp4", "name": "髋回旋上提.mp4", "sizeMB": 28.4}, {"rel": "步态评估（初阶）\\鸭步步态.mp4", "name": "鸭步步态.mp4", "sizeMB": 47.0}], "image": []}, "言语治疗": {"doc": [{"rel": "言语治疗\\2013.3.2医患沟通技巧培训.pdf", "name": "2013.3.2医患沟通技巧培训.pdf", "sizeMB": 187.4}, {"rel": "言语治疗\\吞咽障碍的患者家居康复.pdf", "name": "吞咽障碍的患者家居康复.pdf", "sizeMB": 80.5}, {"rel": "言语治疗\\北京言语学习班课件2010\\组织化卒中医疗及质量控制标准1.ppt", "name": "组织化卒中医疗及质量控制标准1.ppt", "sizeMB": 3.8}, {"rel": "言语治疗\\北京言语学习班课件2010\\吞咽困难\\Dysphagia Boot Camp for Stroke Patients.ppt", "name": "Dysphagia Boot Camp for Stroke Patients.ppt", "sizeMB": 5.0}, {"rel": "言语治疗\\北京言语学习班课件2010\\吞咽困难\\临床实践有效的吞咽处理方法.ppt", "name": "临床实践有效的吞咽处理方法.ppt", "sizeMB": 20.3}, {"rel": "言语治疗\\北京言语学习班课件2010\\吞咽困难\\吞咽障碍与卒中相关性肺炎.ppt", "name": "吞咽障碍与卒中相关性肺炎.ppt", "sizeMB": 19.8}, {"rel": "言语治疗\\北京言语学习班课件2010\\营养\\卒中后营养管理2010.ppt", "name": "卒中后营养管理2010.ppt", "sizeMB": 1.1}, {"rel": "言语治疗\\北京言语学习班课件2010\\营养\\经皮内镜下造瘘.ppt", "name": "经皮内镜下造瘘.ppt", "sizeMB": 16.9}, {"rel": "言语治疗\\北京言语学习班课件2010\\营养\\重症脑血管病的液体管理PICCO技术修改.ppt", "name": "重症脑血管病的液体管理PICCO技术修改.ppt", "sizeMB": 3.7}, {"rel": "言语治疗\\北京言语学习班课件2010\\言语\\失语症的康复治疗.ppt", "name": "失语症的康复治疗.ppt", "sizeMB": 9.9}, {"rel": "言语治疗\\北京言语学习班课件2010\\言语\\失语症的治疗.ppt", "name": "失语症的治疗.ppt", "sizeMB": 0.1}, {"rel": "言语治疗\\北京言语学习班课件2010\\言语\\构音障碍评价.ppt", "name": "构音障碍评价.ppt", "sizeMB": 6.3}, {"rel": "言语治疗\\北京言语学习班课件2010\\言语\\言语障碍培训班.ppt", "name": "言语障碍培训班.ppt", "sizeMB": 3.7}, {"rel": "言语治疗\\北京言语学习班课件2010\\言语\\语言学基础知识_天坛医院.ppt", "name": "语言学基础知识_天坛医院.ppt", "sizeMB": 2.7}, {"rel": "言语治疗\\北京言语学习班课件2010\\认知\\血管性认知功能损害 与卒中的最新进展.ppt", "name": "血管性认知功能损害 与卒中的最新进展.ppt", "sizeMB": 4.0}, {"rel": "言语治疗\\构音障碍\\儿童功能性构音障碍的初步分析.pdf", "name": "儿童功能性构音障碍的初步分析.pdf", "sizeMB": 0.2}, {"rel": "言语治疗\\构音障碍\\儿童功能性构音障碍的初步分析.txt", "name": "儿童功能性构音障碍的初步分析.txt", "sizeMB": 0.0}, {"rel": "言语治疗\\构音障碍\\儿童功能性构音障碍的矫治及影响因素分析.pdf", "name": "儿童功能性构音障碍的矫治及影响因素分析.pdf", "sizeMB": 0.2}, {"rel": "言语治疗\\构音障碍\\儿童功能性构音障碍的言语治疗及效果分析.pdf", "name": "儿童功能性构音障碍的言语治疗及效果分析.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\儿童功能性构音障碍致病危险因素的分析.pdf", "name": "儿童功能性构音障碍致病危险因素的分析.pdf", "sizeMB": 0.2}, {"rel": "言语治疗\\构音障碍\\功能性构音障碍临床表现及语言训练疗效分析英文.pdf", "name": "功能性构音障碍临床表现及语言训练疗效分析英文.pdf", "sizeMB": 0.3}, {"rel": "言语治疗\\构音障碍\\功能性构音障碍儿童构音特点分析及言语矫治.pdf", "name": "功能性构音障碍儿童构音特点分析及言语矫治.pdf", "sizeMB": 0.2}, {"rel": "言语治疗\\构音障碍\\功能性构音障碍儿童的听觉辨别能力研究.pdf", "name": "功能性构音障碍儿童的听觉辨别能力研究.pdf", "sizeMB": 0.2}, {"rel": "言语治疗\\构音障碍\\功能性构音障碍儿童的语言治疗.pdf", "name": "功能性构音障碍儿童的语言治疗.pdf", "sizeMB": 0.2}, {"rel": "言语治疗\\构音障碍\\功能性构音障碍学龄儿童的智力水平和智力结构分析.pdf", "name": "功能性构音障碍学龄儿童的智力水平和智力结构分析.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\功能性构音障碍患儿的言语康复训练.pdf", "name": "功能性构音障碍患儿的言语康复训练.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\听障患者舌面音构音障碍的原因及矫治对策.pdf", "name": "听障患者舌面音构音障碍的原因及矫治对策.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\学龄前功能性构音障碍儿童行为问题的探讨.pdf", "name": "学龄前功能性构音障碍儿童行为问题的探讨.pdf", "sizeMB": 0.2}, {"rel": "言语治疗\\构音障碍\\对构音障碍患者的观察和沟通技巧.pdf", "name": "对构音障碍患者的观察和沟通技巧.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\手法治疗在重度构音障碍训练中的应用.pdf", "name": "手法治疗在重度构音障碍训练中的应用.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\构音障碍的功能性评价.pdf", "name": "构音障碍的功能性评价.pdf", "sizeMB": 0.3}, {"rel": "言语治疗\\构音障碍\\构音障碍的评价与治疗.pdf", "name": "构音障碍的评价与治疗.pdf", "sizeMB": 0.2}, {"rel": "言语治疗\\构音障碍\\构音障碍的评价及语言治疗.pdf", "name": "构音障碍的评价及语言治疗.pdf", "sizeMB": 0.2}, {"rel": "言语治疗\\构音障碍\\构音障碍综合性评价量表的编制.pdf", "name": "构音障碍综合性评价量表的编制.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\综合性发音练习在运动性构音障碍治疗中的应用.pdf", "name": "综合性发音练习在运动性构音障碍治疗中的应用.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\行为疗法在功能性构音障碍中的临床研究与应用.pdf", "name": "行为疗法在功能性构音障碍中的临床研究与应用.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\行为疗法在功能性构音障碍中的研究.pdf", "name": "行为疗法在功能性构音障碍中的研究.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\言语语言障碍儿童语言评估结果分析.pdf", "name": "言语语言障碍儿童语言评估结果分析.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\运动性构音障碍患者的康复治疗.pdf", "name": "运动性构音障碍患者的康复治疗.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\运动性构音障碍言语声学共鸣水平机制及康复疗效研究.pdf", "name": "运动性构音障碍言语声学共鸣水平机制及康复疗效研究.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\运动障碍性构音障碍患者的音节折指法训练.pdf", "name": "运动障碍性构音障碍患者的音节折指法训练.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\构音障碍\\运动障碍性构音障碍言语声学水平机制及治疗进展.pdf", "name": "运动障碍性构音障碍言语声学水平机制及治疗进展.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\言语\\aphasia guildline.pdf", "name": "aphasia guildline.pdf", "sizeMB": 0.1}, {"rel": "言语治疗\\言语\\失语症的治疗.ppt", "name": "失语症的治疗.ppt", "sizeMB": 0.1}], "video": [{"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\01.吞咽障碍概述\\01.什么是吞咽障碍？.mp4", "name": "01.什么是吞咽障碍？.mp4", "sizeMB": 28.6}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\01.吞咽障碍概述\\02.正常与异常吞咽过程.mp4", "name": "02.正常与异常吞咽过程.mp4", "sizeMB": 3.6}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\01.吞咽障碍概述\\03.吞咽障碍患者造影检查表现—残留.mp4", "name": "03.吞咽障碍患者造影检查表现—残留.mp4", "sizeMB": 3.1}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\01.吞咽障碍概述\\04.吞咽启动延迟.mp4", "name": "04.吞咽启动延迟.mp4", "sizeMB": 3.1}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\02.吞咽障碍的评定方法\\01.反复唾液吞咽实验.mp4", "name": "01.反复唾液吞咽实验.mp4", "sizeMB": 9.3}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\02.吞咽障碍的评定方法\\02.饮水实验.mp4", "name": "02.饮水实验.mp4", "sizeMB": 10.4}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\02.吞咽障碍的评定方法\\03.洼田饮水测试观察.mp4", "name": "03.洼田饮水测试观察.mp4", "sizeMB": 5.7}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\02.吞咽障碍的评定方法\\04.吞咽障碍患者康复评定.mp4", "name": "04.吞咽障碍患者康复评定.mp4", "sizeMB": 243.3}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\03.吞咽障碍的康复治疗方法\\01.shake训练法.mp4", "name": "01.shake训练法.mp4", "sizeMB": 23.7}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\03.吞咽障碍的康复治疗方法\\02.吞咽障碍患者声带内收训练.mp4", "name": "02.吞咽障碍患者声带内收训练.mp4", "sizeMB": 33.4}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\03.吞咽障碍的康复治疗方法\\03.吞咽障碍患者舌部运动.mp4", "name": "03.吞咽障碍患者舌部运动.mp4", "sizeMB": 22.6}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\03.吞咽障碍的康复治疗方法\\04.吞咽障碍患者面部及唇部训练.mp4", "name": "04.吞咽障碍患者面部及唇部训练.mp4", "sizeMB": 32.9}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\03.吞咽障碍的康复治疗方法\\05.吞咽障碍患者音调训练+冰酸刺激+超声门上吞咽.mp4", "name": "05.吞咽障碍患者音调训练+冰酸刺激+超声门上吞咽.mp4", "sizeMB": 24.7}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\03.吞咽障碍的康复治疗方法\\06.吞咽障碍的康复.mp4", "name": "06.吞咽障碍的康复.mp4", "sizeMB": 12.6}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\03.吞咽障碍的康复治疗方法\\07.门德尔松手法.mp4", "name": "07.门德尔松手法.mp4", "sizeMB": 35.3}, {"rel": "言语治疗\\吞咽障碍的评定与治疗方法\\03.吞咽障碍的康复治疗方法\\咳嗽训练技术.mp4", "name": "咳嗽训练技术.mp4", "sizeMB": 173.9}, {"rel": "言语治疗\\失语症的评定与治疗方法\\01.失语症的概念\\01.失语症的定义.mp4", "name": "01.失语症的定义.mp4", "sizeMB": 131.2}, {"rel": "言语治疗\\失语症的评定与治疗方法\\01.失语症的概念\\02.运动性失语及临床表现.mp4", "name": "02.运动性失语及临床表现.mp4", "sizeMB": 35.3}, {"rel": "言语治疗\\失语症的评定与治疗方法\\01.失语症的概念\\03.表达性失语.mp4", "name": "03.表达性失语.mp4", "sizeMB": 22.7}, {"rel": "言语治疗\\失语症的评定与治疗方法\\02.失语症的评定方法\\失语症的评定方法.mp4", "name": "失语症的评定方法.mp4", "sizeMB": 34.7}, {"rel": "言语治疗\\失语症的评定与治疗方法\\03.失语症的治疗方法\\01.失语症的治疗原则和注意事项.mp4", "name": "01.失语症的治疗原则和注意事项.mp4", "sizeMB": 21.0}, {"rel": "言语治疗\\失语症的评定与治疗方法\\03.失语症的治疗方法\\02.失语症的综合治疗方法.mp4", "name": "02.失语症的综合治疗方法.mp4", "sizeMB": 39.9}, {"rel": "言语治疗\\失语症的评定与治疗方法\\03.失语症的治疗方法\\03.失语症的对症治疗方法.mp4", "name": "03.失语症的对症治疗方法.mp4", "sizeMB": 24.4}, {"rel": "言语治疗\\失语症的评定与治疗方法\\03.失语症的治疗方法\\04.交流效果促进法.mp4", "name": "04.交流效果促进法.mp4", "sizeMB": 36.2}, {"rel": "言语治疗\\言语解剖生理基础\\01.听力器官的解剖与生理\\01.外耳.mp4", "name": "01.外耳.mp4", "sizeMB": 4.0}, {"rel": "言语治疗\\言语解剖生理基础\\01.听力器官的解剖与生理\\02.中耳.mp4", "name": "02.中耳.mp4", "sizeMB": 18.4}, {"rel": "言语治疗\\言语解剖生理基础\\01.听力器官的解剖与生理\\03.为什么儿童更容易得中耳炎.mp4", "name": "03.为什么儿童更容易得中耳炎.mp4", "sizeMB": 7.1}, {"rel": "言语治疗\\言语解剖生理基础\\01.听力器官的解剖与生理\\04.听觉的产生.mp4", "name": "04.听觉的产生.mp4", "sizeMB": 42.1}, {"rel": "言语治疗\\言语解剖生理基础\\02.言语器官的解剖与生理\\01.言语呼吸系统.mp4", "name": "01.言语呼吸系统.mp4", "sizeMB": 17.8}, {"rel": "言语治疗\\言语解剖生理基础\\02.言语器官的解剖与生理\\02.呼吸运动.mp4", "name": "02.呼吸运动.mp4", "sizeMB": 14.6}, {"rel": "言语治疗\\言语解剖生理基础\\02.言语器官的解剖与生理\\03.发声系统.mp4", "name": "03.发声系统.mp4", "sizeMB": 46.0}, {"rel": "言语治疗\\言语解剖生理基础\\02.言语器官的解剖与生理\\04.共鸣系统.mp4", "name": "04.共鸣系统.mp4", "sizeMB": 23.6}, {"rel": "言语治疗\\言语解剖生理基础\\03.吞咽器官的解剖与生理\\01.吞咽器官.mp4", "name": "01.吞咽器官.mp4", "sizeMB": 10.8}, {"rel": "言语治疗\\言语解剖生理基础\\03.吞咽器官的解剖与生理\\02.吞咽的过程.mp4", "name": "02.吞咽的过程.mp4", "sizeMB": 9.2}], "image": []}, "运动治疗": {"doc": [{"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\下背痛的物理治疗与康复.pdf", "name": "下背痛的物理治疗与康复.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\中医综合康复疗法结合现代康复训练-对中风偏瘫痉挛状态的临床观察.pdf", "name": "中医综合康复疗法结合现代康复训练-对中风偏瘫痉挛状态的临床观察.pdf", "sizeMB": 1.5}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\中医谈中风.pdf", "name": "中医谈中风.pdf", "sizeMB": 0.2}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\中国脑血管病防治指南.pdf", "name": "中国脑血管病防治指南.pdf", "sizeMB": 0.8}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\中药加减兼羊肠线体内植入加心理康复治疗中风病临床研究.PDF", "name": "中药加减兼羊肠线体内植入加心理康复治疗中风病临床研究.PDF", "sizeMB": 0.2}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\中风“左瘫右痪”治不同.PDF", "name": "中风“左瘫右痪”治不同.PDF", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\加用穴位埋线治疗中风偏瘫疗效观察.PDF", "name": "加用穴位埋线治疗中风偏瘫疗效观察.PDF", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\埋线治疗中风验案.pdf", "name": "埋线治疗中风验案.pdf", "sizeMB": 0.0}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\埋线治疗脑瘫300例临床研究.pdf", "name": "埋线治疗脑瘫300例临床研究.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\头穴埋线为主治疗中风后失语症317例.pdf", "name": "头穴埋线为主治疗中风后失语症317例.pdf", "sizeMB": 0.0}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\头穴埋线为主治疗中风后失语症317例疗效观察.pdf", "name": "头穴埋线为主治疗中风后失语症317例疗效观察.pdf", "sizeMB": 0.0}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\头穴埋线为主治疗中风后失语症317例：附对照组104例.pdf", "name": "头穴埋线为主治疗中风后失语症317例：附对照组104例.pdf", "sizeMB": 0.0}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\头穴植线结合药物治疗缺血性卒中118例临床观察.pdf", "name": "头穴植线结合药物治疗缺血性卒中118例临床观察.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\头针,体针加穴位埋线治疗中风偏瘫65例.pdf", "name": "头针,体针加穴位埋线治疗中风偏瘫65例.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\夹脊穴埋线治疗中风偏瘫临床观察.pdf", "name": "夹脊穴埋线治疗中风偏瘫临床观察.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\浮针治疗中风后肩手综合征临床观察.pdf", "name": "浮针治疗中风后肩手综合征临床观察.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\电针配合穴位埋线治疗中风后上肢偏瘫肢体痉挛34例.pdf", "name": "电针配合穴位埋线治疗中风后上肢偏瘫肢体痉挛34例.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\百会穴埋线为主治疗中风后失语症116例临床疗效观察.pdf", "name": "百会穴埋线为主治疗中风后失语症116例临床疗效观察.pdf", "sizeMB": 0.0}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\穴位埋线治疗中风偏瘫100例疗效分析.pdf", "name": "穴位埋线治疗中风偏瘫100例疗效分析.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\穴位埋线治疗中风偏瘫52例.pdf", "name": "穴位埋线治疗中风偏瘫52例.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\穴位埋线治疗中风恢复期50例疗效观察.pdf", "name": "穴位埋线治疗中风恢复期50例疗效观察.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\穴位埋线治疗脑血管病后遗症62例.pdf", "name": "穴位埋线治疗脑血管病后遗症62例.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\穴位埋线疗法对中风偏瘫患者运动功能的影响.pdf", "name": "穴位埋线疗法对中风偏瘫患者运动功能的影响.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\胃康复和穴位埋线法治疗慢性萎缩性胃炎120例疗效分析.pdf", "name": "胃康复和穴位埋线法治疗慢性萎缩性胃炎120例疗效分析.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\芪棱汤对脑梗死后失眠及神经功能康复的影响.pdf", "name": "芪棱汤对脑梗死后失眠及神经功能康复的影响.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\针刺与植线加针刺治疗中风偏瘫的疗效比较.pdf", "name": "针刺与植线加针刺治疗中风偏瘫的疗效比较.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\针刺配合语言康复治疗脑卒中后运动性失语.pdf", "name": "针刺配合语言康复治疗脑卒中后运动性失语.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\针灸与吞咽训练治疗脑卒中后吞咽障碍的研究.pdf", "name": "针灸与吞咽训练治疗脑卒中后吞咽障碍的研究.pdf", "sizeMB": 0.4}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\针灸治疗脑卒中痉挛性偏瘫的临床研究进展.pdf", "name": "针灸治疗脑卒中痉挛性偏瘫的临床研究进展.pdf", "sizeMB": 0.3}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风-相关论文及文献\\长强穴埋线治疗中风后平衡功能障碍3则.pdf", "name": "长强穴埋线治疗中风后平衡功能障碍3则.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\[中风专辑：当代名医临证精华].史宇广.扫描版.pdf", "name": "[中风专辑：当代名医临证精华].史宇广.扫描版.pdf", "sizeMB": 4.6}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\[中风偏瘫实用康复术图解].潘畅&徐麟绘.扫描版.pdf", "name": "[中风偏瘫实用康复术图解].潘畅&徐麟绘.扫描版.pdf", "sizeMB": 12.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风偏瘫实用康复术图解.pdf", "name": "中风偏瘫实用康复术图解.pdf", "sizeMB": 4.4}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风偏瘫家庭康复技法.pdf", "name": "中风偏瘫家庭康复技法.pdf", "sizeMB": 3.0}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风偏瘫现代康复治疗.ppt", "name": "中风偏瘫现代康复治疗.ppt", "sizeMB": 0.2}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风偏瘫的康复.ppt", "name": "中风偏瘫的康复.ppt", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风偏瘫的特种疗法（李玉和）.pdf", "name": "中风偏瘫的特种疗法（李玉和）.pdf", "sizeMB": 3.6}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风单元系列药.ppt", "name": "中风单元系列药.ppt", "sizeMB": 1.4}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风后遗症讲义--邵瑛.ppt", "name": "中风后遗症讲义--邵瑛.ppt", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风后遗症靳三针特效治疗（袁青）.pdf", "name": "中风后遗症靳三针特效治疗（袁青）.pdf", "sizeMB": 4.3}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风后遗的推拿治疗--讲义.ppt", "name": "中风后遗的推拿治疗--讲义.ppt", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风康复与针灸（何广新）.pdf", "name": "中风康复与针灸（何广新）.pdf", "sizeMB": 5.6}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风康复研究（孙光荣）.pdf", "name": "中风康复研究（孙光荣）.pdf", "sizeMB": 19.2}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风患者的生活能力训练[1].ppt", "name": "中风患者的生活能力训练[1].ppt", "sizeMB": 20.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风病的中医治疗与康复指南（张红星）.pdf", "name": "中风病的中医治疗与康复指南（张红星）.pdf", "sizeMB": 5.5}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风病辨证与成方治疗（尹国有）.pdf", "name": "中风病辨证与成方治疗（尹国有）.pdf", "sizeMB": 12.2}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风病防治300问.pdf", "name": "中风病防治300问.pdf", "sizeMB": 8.9}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\中风证治秘法秘方.pdf", "name": "中风证治秘法秘方.pdf", "sizeMB": 2.3}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\偏瘫并发症.ppt", "name": "偏瘫并发症.ppt", "sizeMB": 4.5}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\偏瘫康复治疗技术图解--于兑生著 -1997年.pdf", "name": "偏瘫康复治疗技术图解--于兑生著 -1997年.pdf", "sizeMB": 13.5}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\偏瘫病人的心理治疗.ppt", "name": "偏瘫病人的心理治疗.ppt", "sizeMB": 0.0}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\实用偏瘫康复训练技术图解.pdf", "name": "实用偏瘫康复训练技术图解.pdf", "sizeMB": 17.3}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\实用瘫痪康复.pdf", "name": "实用瘫痪康复.pdf", "sizeMB": 15.2}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\彭氏眼针治疗急性缺血性中风技术.doc", "name": "彭氏眼针治疗急性缺血性中风技术.doc", "sizeMB": 0.0}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\推拿在脑卒中康复中的应用述评.PDF", "name": "推拿在脑卒中康复中的应用述评.PDF", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\治疗中风偏瘫需要针灸与康复医学的结合.pdf", "name": "治疗中风偏瘫需要针灸与康复医学的结合.pdf", "sizeMB": 0.4}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\脑卒中偏瘫针灸康复治疗的研究进展.pdf", "name": "脑卒中偏瘫针灸康复治疗的研究进展.pdf", "sizeMB": 0.1}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\脑卒中合并症的康复 .ppt", "name": "脑卒中合并症的康复 .ppt", "sizeMB": 1.5}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\脑卒中康复.pdf", "name": "脑卒中康复.pdf", "sizeMB": 48.5}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\脑卒中康复指南.pdf", "name": "脑卒中康复指南.pdf", "sizeMB": 8.5}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\脑卒中康复治疗技术.pdf", "name": "脑卒中康复治疗技术.pdf", "sizeMB": 27.9}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\脑卒中康复治疗新进展.PDF", "name": "脑卒中康复治疗新进展.PDF", "sizeMB": 0.2}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\脑卒中恢复康复锻炼.doc", "name": "脑卒中恢复康复锻炼.doc", "sizeMB": 0.0}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\脑卒中痉挛状态的康复治疗.pdf", "name": "脑卒中痉挛状态的康复治疗.pdf", "sizeMB": 0.7}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\脑卒中的中西医康复治疗图解（陈玉辰）.pdf", "name": "脑卒中的中西医康复治疗图解（陈玉辰）.pdf", "sizeMB": 8.8}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\运用董氏奇穴治疗半身不遂、中风后遗症的临床秘验.doc", "name": "运用董氏奇穴治疗半身不遂、中风后遗症的临床秘验.doc", "sizeMB": 0.0}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--电子版书籍类\\透穴刺法治疗中风后小脑性共济失调技术.doc", "name": "透穴刺法治疗中风后小脑性共济失调技术.doc", "sizeMB": 0.0}], "video": [{"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\中风偏瘫家庭保健按摩概述.mp4", "name": "中风偏瘫家庭保健按摩概述.mp4", "sizeMB": 31.2}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\中风偏瘫常用穴位介绍.mp4", "name": "中风偏瘫常用穴位介绍.mp4", "sizeMB": 13.4}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\中风偏瘫康复操.mp4", "name": "中风偏瘫康复操.mp4", "sizeMB": 572.5}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\中风偏瘫的--自我保健法.mp4", "name": "中风偏瘫的--自我保健法.mp4", "sizeMB": 88.7}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\中风偏瘫的按摩--上肢.mp4", "name": "中风偏瘫的按摩--上肢.mp4", "sizeMB": 144.6}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\中风偏瘫的按摩--下肢.mp4", "name": "中风偏瘫的按摩--下肢.mp4", "sizeMB": 99.0}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\中风偏瘫的按摩--头颈脊.mp4", "name": "中风偏瘫的按摩--头颈脊.mp4", "sizeMB": 146.3}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\中风后--偏瘫的康复治疗-1.mp4", "name": "中风后--偏瘫的康复治疗-1.mp4", "sizeMB": 203.9}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\中风后--偏瘫的康复治疗-2.mp4", "name": "中风后--偏瘫的康复治疗-2.mp4", "sizeMB": 191.2}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\中风后--偏瘫的康复治疗-3.mp4", "name": "中风后--偏瘫的康复治疗-3.mp4", "sizeMB": 99.6}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\实用偏瘫康复训练技术.flv", "name": "实用偏瘫康复训练技术.flv", "sizeMB": 70.4}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\彭氏眼针治疗急性缺血性中风技术.mp4", "name": "彭氏眼针治疗急性缺血性中风技术.mp4", "sizeMB": 140.9}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\李仕平--点穴治疗中风偏瘫.mp4", "name": "李仕平--点穴治疗中风偏瘫.mp4", "sizeMB": 146.0}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\江庆兴--中风之复健.mp4", "name": "江庆兴--中风之复健.mp4", "sizeMB": 24.3}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\综合治疗中风后遗症——偏瘫.mp4", "name": "综合治疗中风后遗症——偏瘫.mp4", "sizeMB": 189.2}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\舒博士中风偏瘫康复操.flv", "name": "舒博士中风偏瘫康复操.flv", "sizeMB": 11.8}, {"rel": "运动治疗\\中风偏瘫脑瘫系列\\中风偏瘫脑瘫康复--视频篇23个\\透穴刺法治疗中风后小脑性共济失调技术.mp4", "name": "透穴刺法治疗中风后小脑性共济失调技术.mp4", "sizeMB": 127.7}, {"rel": "运动治疗\\偏瘫运动训练\\偏瘫下肢练习.1.mp4", "name": "偏瘫下肢练习.1.mp4", "sizeMB": 75.1}, {"rel": "运动治疗\\偏瘫运动训练\\偏瘫下肢练习.2.mp4", "name": "偏瘫下肢练习.2.mp4", "sizeMB": 59.0}, {"rel": "运动治疗\\偏瘫运动训练\\偏瘫的康复训练.mp4", "name": "偏瘫的康复训练.mp4", "sizeMB": 688.7}, {"rel": "运动治疗\\偏瘫运动训练\\偏瘫的早期康复.mp4", "name": "偏瘫的早期康复.mp4", "sizeMB": 515.3}, {"rel": "运动治疗\\偏瘫运动训练\\良肢位摆放.mp4", "name": "良肢位摆放.mp4", "sizeMB": 308.7}, {"rel": "运动治疗\\脑卒中康复\\中风偏瘫的康复治疗+案分析.mp4", "name": "中风偏瘫的康复治疗+案分析.mp4", "sizeMB": 323.0}, {"rel": "运动治疗\\脑卒中康复\\中风偏瘫的治疗.mp4", "name": "中风偏瘫的治疗.mp4", "sizeMB": 593.2}, {"rel": "运动治疗\\脑卒中康复\\吞咽障碍与康复.mp4", "name": "吞咽障碍与康复.mp4", "sizeMB": 222.4}, {"rel": "运动治疗\\脑卒中康复\\吞咽障碍康复.mp4", "name": "吞咽障碍康复.mp4", "sizeMB": 383.9}, {"rel": "运动治疗\\脑卒中康复\\正确的步行训练.mp4", "name": "正确的步行训练.mp4", "sizeMB": 551.6}, {"rel": "运动治疗\\脑卒中康复教学视频\\001伸展腰背部  1.mp4", "name": "001伸展腰背部  1.mp4", "sizeMB": 14.8}, {"rel": "运动治疗\\脑卒中康复教学视频\\002伸展腰背部  2.mp4", "name": "002伸展腰背部  2.mp4", "sizeMB": 16.6}, {"rel": "运动治疗\\脑卒中康复教学视频\\003伸展上肢和胸部   1-.mp4", "name": "003伸展上肢和胸部   1-.mp4", "sizeMB": 14.2}, {"rel": "运动治疗\\脑卒中康复教学视频\\004伸展上肢和胸部   2-.mp4", "name": "004伸展上肢和胸部   2-.mp4", "sizeMB": 18.1}, {"rel": "运动治疗\\脑卒中康复教学视频\\005伸展大腿后部   1.mp4", "name": "005伸展大腿后部   1.mp4", "sizeMB": 18.5}, {"rel": "运动治疗\\脑卒中康复教学视频\\006伸展大腿后部   2.mp4", "name": "006伸展大腿后部   2.mp4", "sizeMB": 18.0}, {"rel": "运动治疗\\脑卒中康复教学视频\\007伸展大腿前部.mp4", "name": "007伸展大腿前部.mp4", "sizeMB": 18.4}, {"rel": "运动治疗\\脑卒中康复教学视频\\008伸展小腿后部  1.mp4", "name": "008伸展小腿后部  1.mp4", "sizeMB": 32.0}, {"rel": "运动治疗\\脑卒中康复教学视频\\009伸展小腿后部  2.mp4", "name": "009伸展小腿后部  2.mp4", "sizeMB": 18.4}, {"rel": "运动治疗\\脑卒中康复教学视频\\010伸展大腿根部  1.mp4", "name": "010伸展大腿根部  1.mp4", "sizeMB": 18.5}, {"rel": "运动治疗\\脑卒中康复教学视频\\011伸展大腿根部  2.mp4", "name": "011伸展大腿根部  2.mp4", "sizeMB": 18.2}, {"rel": "运动治疗\\脑卒中康复教学视频\\012肩关节屈曲练习.mp4", "name": "012肩关节屈曲练习.mp4", "sizeMB": 37.1}, {"rel": "运动治疗\\脑卒中康复教学视频\\013肩关节外展练习.mp4", "name": "013肩关节外展练习.mp4", "sizeMB": 18.6}, {"rel": "运动治疗\\脑卒中康复教学视频\\014肩关节的内旋、外旋练习.mp4", "name": "014肩关节的内旋、外旋练习.mp4", "sizeMB": 16.4}, {"rel": "运动治疗\\脑卒中康复教学视频\\015肩关节水平外展练习.mp4", "name": "015肩关节水平外展练习.mp4", "sizeMB": 16.6}, {"rel": "运动治疗\\脑卒中康复教学视频\\016伴屈肘的肩关节水平内收练习.mp4", "name": "016伴屈肘的肩关节水平内收练习.mp4", "sizeMB": 15.7}, {"rel": "运动治疗\\脑卒中康复教学视频\\017肘关节屈曲与伸展练习.mp4", "name": "017肘关节屈曲与伸展练习.mp4", "sizeMB": 17.8}, {"rel": "运动治疗\\脑卒中康复教学视频\\018前臂的旋前、旋后练习.mp4", "name": "018前臂的旋前、旋后练习.mp4", "sizeMB": 31.8}, {"rel": "运动治疗\\脑卒中康复教学视频\\019腕关节背伸练习.mp4", "name": "019腕关节背伸练习.mp4", "sizeMB": 16.6}, {"rel": "运动治疗\\脑卒中康复教学视频\\020掌指关节及指间关节练习.mp4", "name": "020掌指关节及指间关节练习.mp4", "sizeMB": 31.9}, {"rel": "运动治疗\\脑卒中康复教学视频\\021屈髋屈膝练习.mp4", "name": "021屈髋屈膝练习.mp4", "sizeMB": 15.5}, {"rel": "运动治疗\\脑卒中康复教学视频\\022髋关节内旋练习.mp4", "name": "022髋关节内旋练习.mp4", "sizeMB": 15.1}, {"rel": "运动治疗\\脑卒中康复教学视频\\023髋关节外旋练习.mp4", "name": "023髋关节外旋练习.mp4", "sizeMB": 15.2}, {"rel": "运动治疗\\脑卒中康复教学视频\\024髋关节内收练习.mp4", "name": "024髋关节内收练习.mp4", "sizeMB": 16.3}, {"rel": "运动治疗\\脑卒中康复教学视频\\025髋关节外展练习.mp4", "name": "025髋关节外展练习.mp4", "sizeMB": 17.1}, {"rel": "运动治疗\\脑卒中康复教学视频\\026膝关节屈伸练习  1.mp4", "name": "026膝关节屈伸练习  1.mp4", "sizeMB": 17.0}, {"rel": "运动治疗\\脑卒中康复教学视频\\027膝关节屈伸练习  2.mp4", "name": "027膝关节屈伸练习  2.mp4", "sizeMB": 16.5}, {"rel": "运动治疗\\脑卒中康复教学视频\\028踝关节背屈练习.mp4", "name": "028踝关节背屈练习.mp4", "sizeMB": 17.0}, {"rel": "运动治疗\\脑卒中康复教学视频\\029活动病人的侧躯干.mp4", "name": "029活动病人的侧躯干.mp4", "sizeMB": 29.0}, {"rel": "运动治疗\\脑卒中康复教学视频\\030坐位下肩关节的环转活动练习.mp4", "name": "030坐位下肩关节的环转活动练习.mp4", "sizeMB": 32.5}, {"rel": "运动治疗\\脑卒中康复教学视频\\031自己活动患侧肩关节.mp4", "name": "031自己活动患侧肩关节.mp4", "sizeMB": 18.4}, {"rel": "运动治疗\\脑卒中康复教学视频\\032自己活动患侧肘关节及前臂旋转.mp4", "name": "032自己活动患侧肘关节及前臂旋转.mp4", "sizeMB": 34.2}, {"rel": "运动治疗\\脑卒中康复教学视频\\033自己活动患侧腕关节及手指.mp4", "name": "033自己活动患侧腕关节及手指.mp4", "sizeMB": 37.1}, {"rel": "运动治疗\\脑卒中康复教学视频\\034床上搭双桥的辅助练习.mp4", "name": "034床上搭双桥的辅助练习.mp4", "sizeMB": 18.4}, {"rel": "运动治疗\\脑卒中康复教学视频\\035床上搭双桥的自主练习.mp4", "name": "035床上搭双桥的自主练习.mp4", "sizeMB": 16.5}, {"rel": "运动治疗\\脑卒中康复教学视频\\036床上搭单桥的辅助练习.mp4", "name": "036床上搭单桥的辅助练习.mp4", "sizeMB": 18.9}, {"rel": "运动治疗\\脑卒中康复教学视频\\037床上搭单桥的自主练习.mp4", "name": "037床上搭单桥的自主练习.mp4", "sizeMB": 16.2}, {"rel": "运动治疗\\脑卒中康复教学视频\\038立位下的躯干旋转练习.mp4", "name": "038立位下的躯干旋转练习.mp4", "sizeMB": 17.5}, {"rel": "运动治疗\\脑卒中康复教学视频\\039抑制上肢屈肌痉挛模式.mp4", "name": "039抑制上肢屈肌痉挛模式.mp4", "sizeMB": 30.6}, {"rel": "运动治疗\\脑卒中康复教学视频\\040缓解下肢伸肌痉挛.mp4", "name": "040缓解下肢伸肌痉挛.mp4", "sizeMB": 37.1}, {"rel": "运动治疗\\脑卒中康复教学视频\\041从健侧的独立坐起练习.mp4", "name": "041从健侧的独立坐起练习.mp4", "sizeMB": 18.5}, {"rel": "运动治疗\\脑卒中康复教学视频\\042主动站起练习.mp4", "name": "042主动站起练习.mp4", "sizeMB": 37.0}, {"rel": "运动治疗\\脑卒中康复教学视频\\043向前、向后重心转移.mp4", "name": "043向前、向后重心转移.mp4", "sizeMB": 37.0}, {"rel": "运动治疗\\脑卒中康复教学视频\\044立位下练习前后方向平衡.mp4", "name": "044立位下练习前后方向平衡.mp4", "sizeMB": 18.5}, {"rel": "运动治疗\\脑卒中康复教学视频\\045立位下练习左右方向平衡.mp4", "name": "045立位下练习左右方向平衡.mp4", "sizeMB": 37.0}, {"rel": "运动治疗\\脑卒中康复教学视频\\046立位姿势和静态平衡练习.mp4", "name": "046立位姿势和静态平衡练习.mp4", "sizeMB": 37.2}, {"rel": "运动治疗\\脑卒中康复教学视频\\047患侧负重支撑练习.mp4", "name": "047患侧负重支撑练习.mp4", "sizeMB": 18.5}, {"rel": "运动治疗\\脑卒中康复教学视频\\048辅助下的步行练习.mp4", "name": "048辅助下的步行练习.mp4", "sizeMB": 18.5}, {"rel": "运动治疗\\脑卒中康复教学视频\\049自己进行步行练习.mp4", "name": "049自己进行步行练习.mp4", "sizeMB": 18.4}, {"rel": "运动治疗\\脑卒中康复教学视频\\050俯卧撑.mp4", "name": "050俯卧撑.mp4", "sizeMB": 37.2}, {"rel": "运动治疗\\脑卒中康复教学视频\\051仰卧起坐.mp4", "name": "051仰卧起坐.mp4", "sizeMB": 37.1}, {"rel": "运动治疗\\脑卒中康复教学视频\\052平板撑.mp4", "name": "052平板撑.mp4", "sizeMB": 32.8}, {"rel": "运动治疗\\运动康复\\Bobath技术治疗脑卒中病人\\Bobath技术治疗脑卒中病人.mp4", "name": "Bobath技术治疗脑卒中病人.mp4", "sizeMB": 93.1}, {"rel": "运动治疗\\运动康复\\Brunnstrom技术\\Brunnstrom技术的操作.mp4", "name": "Brunnstrom技术的操作.mp4", "sizeMB": 86.1}, {"rel": "运动治疗\\运动康复\\PNF技术\\PNF技术的基本运动模式.mp4", "name": "PNF技术的基本运动模式.mp4", "sizeMB": 63.4}, {"rel": "运动治疗\\运动康复\\体位转移训练\\01.偏瘫病人的体位转移.mp4", "name": "01.偏瘫病人的体位转移.mp4", "sizeMB": 131.5}, {"rel": "运动治疗\\运动康复\\体位转移训练\\02.偏瘫病人的体位转移.mp4", "name": "02.偏瘫病人的体位转移.mp4", "sizeMB": 67.9}, {"rel": "运动治疗\\运动康复\\体位转移训练\\03.四肢瘫病人的体位转移.mp4", "name": "03.四肢瘫病人的体位转移.mp4", "sizeMB": 10.8}, {"rel": "运动治疗\\运动康复\\体位转移训练\\04.截瘫病人的体位转移.mp4", "name": "04.截瘫病人的体位转移.mp4", "sizeMB": 44.4}, {"rel": "运动治疗\\运动康复\\关节松动技术\\01.肩部关节松动技术.mp4", "name": "01.肩部关节松动技术.mp4", "sizeMB": 22.8}, {"rel": "运动治疗\\运动康复\\关节松动技术\\02.肩部关节松动技术.mp4", "name": "02.肩部关节松动技术.mp4", "sizeMB": 36.8}, {"rel": "运动治疗\\运动康复\\关节松动技术\\03.肘部关节松动技术.mp4", "name": "03.肘部关节松动技术.mp4", "sizeMB": 42.1}, {"rel": "运动治疗\\运动康复\\关节松动技术\\04.腕部关节松动技术.mp4", "name": "04.腕部关节松动技术.mp4", "sizeMB": 57.2}, {"rel": "运动治疗\\运动康复\\关节松动技术\\05.髋部关节松动技术.mp4", "name": "05.髋部关节松动技术.mp4", "sizeMB": 52.4}, {"rel": "运动治疗\\运动康复\\关节松动技术\\06.膝部关节松动技术.mp4", "name": "06.膝部关节松动技术.mp4", "sizeMB": 55.1}, {"rel": "运动治疗\\运动康复\\关节松动技术\\07.踝部关节松动技术.mp4", "name": "07.踝部关节松动技术.mp4", "sizeMB": 49.4}, {"rel": "运动治疗\\运动康复\\关节松动技术\\08.颈椎关节松动技术.mp4", "name": "08.颈椎关节松动技术.mp4", "sizeMB": 83.6}, {"rel": "运动治疗\\运动康复\\关节松动技术\\09.胸椎关节松动技术.mp4", "name": "09.胸椎关节松动技术.mp4", "sizeMB": 32.4}, {"rel": "运动治疗\\运动康复\\关节松动技术\\10.腰椎关节松动技术.mp4", "name": "10.腰椎关节松动技术.mp4", "sizeMB": 45.1}, {"rel": "运动治疗\\运动康复\\关节松动技术\\11.骨盆关节松动技术.mp4", "name": "11.骨盆关节松动技术.mp4", "sizeMB": 62.5}, {"rel": "运动治疗\\运动康复\\关节松动技术\\12.拓展：肩部关节松动技术.mp4", "name": "12.拓展：肩部关节松动技术.mp4", "sizeMB": 93.1}, {"rel": "运动治疗\\运动康复\\关节松动技术\\13.拓展：肘前臂及手部关节松动技术.mp4", "name": "13.拓展：肘前臂及手部关节松动技术.mp4", "sizeMB": 185.8}, {"rel": "运动治疗\\运动康复\\关节松动技术\\14.拓展：髋膝部关节松动技术.mp4", "name": "14.拓展：髋膝部关节松动技术.mp4", "sizeMB": 103.2}, {"rel": "运动治疗\\运动康复\\关节活动技术\\01.认识关节活动技术.mp4", "name": "01.认识关节活动技术.mp4", "sizeMB": 51.8}, {"rel": "运动治疗\\运动康复\\关节活动技术\\02.肩部关节活动技术.mp4", "name": "02.肩部关节活动技术.mp4", "sizeMB": 36.1}, {"rel": "运动治疗\\运动康复\\关节活动技术\\03.肘关节关节活动技术.mp4", "name": "03.肘关节关节活动技术.mp4", "sizeMB": 37.9}, {"rel": "运动治疗\\运动康复\\关节活动技术\\04.腕关节活动技术.mp4", "name": "04.腕关节活动技术.mp4", "sizeMB": 17.9}, {"rel": "运动治疗\\运动康复\\关节活动技术\\05.髋关节活动技术.mp4", "name": "05.髋关节活动技术.mp4", "sizeMB": 44.8}, {"rel": "运动治疗\\运动康复\\关节活动技术\\06.膝关节活动技术.mp4", "name": "06.膝关节活动技术.mp4", "sizeMB": 9.3}, {"rel": "运动治疗\\运动康复\\关节活动技术\\07.踝关节活动技术.mp4", "name": "07.踝关节活动技术.mp4", "sizeMB": 10.5}, {"rel": "运动治疗\\运动康复\\关节活动技术\\08.关节活动拓展内容.mp4", "name": "08.关节活动拓展内容.mp4", "sizeMB": 80.8}, {"rel": "运动治疗\\运动康复\\协调训练\\协调训练的方法.mp4", "name": "协调训练的方法.mp4", "sizeMB": 43.5}, {"rel": "运动治疗\\运动康复\\平衡训练\\1.卧位平衡训练.mp4", "name": "1.卧位平衡训练.mp4", "sizeMB": 78.5}, {"rel": "运动治疗\\运动康复\\平衡训练\\10拓展训练.mp4", "name": "10拓展训练.mp4", "sizeMB": 50.3}, {"rel": "运动治疗\\运动康复\\平衡训练\\2.肘膝位平衡训练.mp4", "name": "2.肘膝位平衡训练.mp4", "sizeMB": 48.5}, {"rel": "运动治疗\\运动康复\\平衡训练\\3.手膝跪位平衡训练.mp4", "name": "3.手膝跪位平衡训练.mp4", "sizeMB": 45.3}, {"rel": "运动治疗\\运动康复\\平衡训练\\4.跪位平衡训练.mp4", "name": "4.跪位平衡训练.mp4", "sizeMB": 43.9}, {"rel": "运动治疗\\运动康复\\平衡训练\\5.半跪位平衡训练.mp4", "name": "5.半跪位平衡训练.mp4", "sizeMB": 51.5}, {"rel": "运动治疗\\运动康复\\平衡训练\\6.站立平衡训练.mp4", "name": "6.站立平衡训练.mp4", "sizeMB": 61.7}, {"rel": "运动治疗\\运动康复\\平衡训练\\7.坐位平衡训练.mp4", "name": "7.坐位平衡训练.mp4", "sizeMB": 69.2}, {"rel": "运动治疗\\运动康复\\平衡训练\\8.站立平衡训练.mp4", "name": "8.站立平衡训练.mp4", "sizeMB": 32.9}, {"rel": "运动治疗\\运动康复\\平衡训练\\9.拓展资源.mp4", "name": "9.拓展资源.mp4", "sizeMB": 78.9}, {"rel": "运动治疗\\运动康复\\有氧训练\\有氧训练.mp4", "name": "有氧训练.mp4", "sizeMB": 59.1}, {"rel": "运动治疗\\运动康复\\步行训练\\1.步行训练的方法.mp4", "name": "1.步行训练的方法.mp4", "sizeMB": 40.5}, {"rel": "运动治疗\\运动康复\\步行训练\\2.步行训练的方法.mp4", "name": "2.步行训练的方法.mp4", "sizeMB": 55.1}, {"rel": "运动治疗\\运动康复\\肌力训练\\01.肩部肌群的肌力训练.mp4", "name": "01.肩部肌群的肌力训练.mp4", "sizeMB": 61.1}, {"rel": "运动治疗\\运动康复\\肌力训练\\02.肩部肌群的肌力训练.mp4", "name": "02.肩部肌群的肌力训练.mp4", "sizeMB": 51.3}, {"rel": "运动治疗\\运动康复\\肌力训练\\03.肘部肌群的肌力训练.mp4", "name": "03.肘部肌群的肌力训练.mp4", "sizeMB": 73.9}, {"rel": "运动治疗\\运动康复\\肌力训练\\04.肘部肌群的肌力训练.mp4", "name": "04.肘部肌群的肌力训练.mp4", "sizeMB": 78.3}, {"rel": "运动治疗\\运动康复\\肌力训练\\05.前臂肌群的肌力训练.mp4", "name": "05.前臂肌群的肌力训练.mp4", "sizeMB": 60.7}, {"rel": "运动治疗\\运动康复\\肌力训练\\06.腕部肌群的肌力训练.mp4", "name": "06.腕部肌群的肌力训练.mp4", "sizeMB": 46.9}, {"rel": "运动治疗\\运动康复\\肌力训练\\07.腕部肌群的肌力训练.mp4", "name": "07.腕部肌群的肌力训练.mp4", "sizeMB": 24.8}, {"rel": "运动治疗\\运动康复\\肌力训练\\08.手部肌群的肌力训练.mp4", "name": "08.手部肌群的肌力训练.mp4", "sizeMB": 51.4}, {"rel": "运动治疗\\运动康复\\肌力训练\\09.髋部肌群的肌力训练.mp4", "name": "09.髋部肌群的肌力训练.mp4", "sizeMB": 71.2}, {"rel": "运动治疗\\运动康复\\肌力训练\\10.髋部肌群的肌力训练.mp4", "name": "10.髋部肌群的肌力训练.mp4", "sizeMB": 74.3}, {"rel": "运动治疗\\运动康复\\肌力训练\\11.膝部肌群的肌力训练.mp4", "name": "11.膝部肌群的肌力训练.mp4", "sizeMB": 61.7}, {"rel": "运动治疗\\运动康复\\肌力训练\\12.膝部肌群的肌力训练.mp4", "name": "12.膝部肌群的肌力训练.mp4", "sizeMB": 50.5}, {"rel": "运动治疗\\运动康复\\肌力训练\\13.踝部肌群的肌力训练.mp4", "name": "13.踝部肌群的肌力训练.mp4", "sizeMB": 66.2}, {"rel": "运动治疗\\运动康复\\肌力训练\\14.踝部肌群的肌力训练.mp4", "name": "14.踝部肌群的肌力训练.mp4", "sizeMB": 40.2}, {"rel": "运动治疗\\运动康复\\肌力训练\\15.颈部肌群的肌力训练.mp4", "name": "15.颈部肌群的肌力训练.mp4", "sizeMB": 37.4}, {"rel": "运动治疗\\运动康复\\肌力训练\\16.躯干肌群的肌力训练.mp4", "name": "16.躯干肌群的肌力训练.mp4", "sizeMB": 60.8}, {"rel": "运动治疗\\运动康复\\肌力训练\\17.躯干肌群的肌力训练.mp4", "name": "17.躯干肌群的肌力训练.mp4", "sizeMB": 48.6}, {"rel": "运动治疗\\运动康复\\肌力训练\\18.拓展：上肢肌群训练.mp4", "name": "18.拓展：上肢肌群训练.mp4", "sizeMB": 71.6}, {"rel": "运动治疗\\运动康复\\肌力训练\\19.拓展：上肢肌群训练.mp4", "name": "19.拓展：上肢肌群训练.mp4", "sizeMB": 12.7}, {"rel": "运动治疗\\运动康复\\肌力训练\\20.拓展 下肢肌群肌力训练.mp4", "name": "20.拓展 下肢肌群肌力训练.mp4", "sizeMB": 50.6}, {"rel": "运动治疗\\运动康复\\肌力训练\\21.拓展 下肢肌群肌力训练.mp4", "name": "21.拓展 下肢肌群肌力训练.mp4", "sizeMB": 13.9}], "image": []}};
+
+const DOCS = {"川平法课程": [], "康复治疗学": [], "康复的书": [], "康复评定": [{"name": "Barthel指数.docx", "rel": "康复评定\\Barthel指数.docx", "sizeMB": 0.01, "ext": ".docx", "pages": 0, "scanned": false, "chars": 443, "text": ""}, {"name": "BI-100(改良).docx", "rel": "康复评定\\BI-100(改良).docx", "sizeMB": 0.01, "ext": ".docx", "pages": 0, "scanned": false, "chars": 338, "text": ""}, {"name": "Carr平衡功能评定法.docx", "rel": "康复评定\\Carr平衡功能评定法.docx", "sizeMB": 0.01, "ext": ".docx", "pages": 0, "scanned": false, "chars": 644, "text": ""}, {"name": "FIM评估.docx", "rel": "康复评定\\FIM评估.docx", "sizeMB": 0.02, "ext": ".docx", "pages": 0, "scanned": false, "chars": 3521, "text": ""}, {"name": "Fugl-Meyer评定法.docx", "rel": "康复评定\\Fugl-Meyer评定法.docx", "sizeMB": 0.01, "ext": ".docx", "pages": 0, "scanned": false, "chars": 510, "text": ""}, {"name": "MMT.docx", "rel": "康复评定\\MMT.docx", "sizeMB": 0.59, "ext": ".docx", "pages": 0, "scanned": false, "chars": 1395, "text": ""}, {"name": "ROM.docx", "rel": "康复评定\\ROM.docx", "sizeMB": 0.38, "ext": ".docx", "pages": 0, "scanned": false, "chars": 791, "text": ""}, {"name": "上田氏平衡反应试验.docx", "rel": "康复评定\\上田氏平衡反应试验.docx", "sizeMB": 0.1, "ext": ".docx", "pages": 0, "scanned": false, "chars": 258, "text": ""}, {"name": "康复评定.docx", "rel": "康复评定\\康复评定.docx", "sizeMB": 0.09, "ext": ".docx", "pages": 0, "scanned": false, "chars": 3916, "text": ""}, {"name": "徒手肌力的评定.docx", "rel": "康复评定\\徒手肌力的评定.docx", "sizeMB": 0.78, "ext": ".docx", "pages": 0, "scanned": false, "chars": 1863, "text": ""}, {"name": "新建 DOCX 文档 (2).docx", "rel": "康复评定\\新建 DOCX 文档 (2).docx", "sizeMB": 15.94, "ext": ".docx", "pages": 0, "scanned": false, "chars": 3521, "text": ""}, {"name": "物理因子治疗.docx", "rel": "康复评定\\物理因子治疗.docx", "sizeMB": 0.02, "ext": ".docx", "pages": 0, "scanned": false, "chars": 3627, "text": ""}, {"name": "脊髓.docx", "rel": "康复评定\\脊髓.docx", "sizeMB": 1.86, "ext": ".docx", "pages": 0, "scanned": false, "chars": 787, "text": ""}, {"name": "膝关节功能评价记录表.docx", "rel": "康复评定\\膝关节功能评价记录表.docx", "sizeMB": 0.01, "ext": ".docx", "pages": 0, "scanned": false, "chars": 1511, "text": ""}, {"name": "运动疗法.docx", "rel": "康复评定\\运动疗法.docx", "sizeMB": 0.02, "ext": ".docx", "pages": 0, "scanned": false, "chars": 1953, "text": ""}], "言语治疗": [], "运动治疗": []};
+
+const KP_HTML = {"pnf": "\n<div class=\"kp\"><h3>螺旋对角模式 D1/D2 <span class=\"tag\">必考</span></h3>\n<p>身体每部位都有 D1、D2 两个对角线模式，含屈/伸、外展/内收、内外旋三成分。</p>\n<ul><li><b>D1屈</b>：肩前屈+内收+外旋，前臂旋后，腕掌屈桡偏——手伸嘴边、梳对侧头</li>\n<li><b>D1伸</b>：肩后伸+外展+内旋，前臂旋前，腕背伸尺偏——开车门、网球正手</li>\n<li><b>D2屈</b>：肩前屈+外展+外旋，前臂旋后，腕背伸桡偏——梳同侧头、仰泳</li>\n<li><b>D2伸</b>：肩后伸+内收+内旋，前臂旋前，腕掌屈尺偏——手摸对侧膝</li></ul></div>\n<div class=\"kp\"><h3>15种基本手法</h3>\n<ul><li><b>节律性发动</b>：被动→主动辅助→主动→轻抗阻，改善运动启动。</li>\n<li><b>收缩-放松</b>：拮抗肌等张抗阻后放松，增加被动ROM。</li>\n<li><b>保持-放松</b>：等长抗阻5-10秒后放松，用于疼痛性受限。</li>\n<li><b>拮抗肌反转</b>：主动/拮抗肌交替节律抗阻，改善协同。</li>\n<li>重复、时序叠加、组合运动、接触挤压等。</li></ul></div>\n<div class=\"kp\"><h3>治疗原则</h3>\n<p>从头→足、近端→远端；存在痉挛时先抑制痉挛→促拮抗肌→促姿势反射；利用非对称性紧张颈反射强化肌力。</p>\n<div class=\"latest\"><b>对应视频：</b>本目录13个.ts视频从概论到上肢/下肢/颈/躯干/步态/面瘫吞咽言语应用完整授课。</div></div>", "ot": "\n<div class=\"kp\"><h3>基本概念</h3>\n<p>作业(Occupation)指日常所做一切事——自我照顾、娱乐、生产贡献。OT不是练肌肉，而是<b>通过有意义的活动重塑人的角色与生活</b>。</p></div>\n<div class=\"kp\"><h3>三大理论模式 <span class=\"tag\">高频考点</span></h3>\n<ul><li><b>CMOP</b>：作业表现+作业构成+作业情景三部分。</li>\n<li><b>MOHO</b>：意向（兴趣/价值/自我效能）+习惯（习惯模式/角色/社会化）+作业能力。</li>\n<li><b>PEO</b>：人-环境-作业三者互动，重叠越大作业表现越好。</li></ul></div>\n<div class=\"kp\"><h3>OT干预手段</h3>\n<ul><li>ADL训练、治疗性作业活动（木工/编织/书法）</li>\n<li>辅助技术（自助具/加粗餐具/轮椅）</li>\n<li>环境改造（无障碍/扶手/智能家控）</li>\n<li>支具矫形器、职业康复、团体治疗</li></ul></div>\n<div class=\"kp\"><h3>专科OT</h3>\n<ul><li><b>脑卒中</b>：偏瘫侧上肢手功能、ADL再学习、忽略训练</li>\n<li><b>手外伤</b>：术后保护位、感觉再教育、渐进抓握</li>\n<li><b>帕金森</b>：节律提示、冻结步态策略</li>\n<li><b>失智</b>：确认疗法、怀旧疗法、结构化日常</li></ul>\n<div class=\"latest\"><b>视频：</b>本目录164个mp4系统授课。</div></div>", "rihen": "\n<div class=\"kp\"><h3>核心原理</h3>\n<p>脑卒中后瘫痪不是单纯肌无力，而是大脑运动程序与感觉反馈通路中断。RFE通过治疗师手法反复促通瘫痪侧上肢运动，强制使用患侧，诱导大脑皮质功能重组。</p>\n<p>与CIMT区别：RFE更强调治疗师手法引导，适用于早期、弛缓期即有微弱运动者。</p></div>\n<div class=\"kp\"><h3>上肢/下肢手法</h3>\n<p><b>上肢</b>：仰卧/坐位引导患侧肩外展外旋、肘伸、前臂旋后、腕背伸、拇指外展，配合口令反复抓起-释放。<br>\n<b>下肢</b>：屈髋屈膝踝背屈模式下反复踝背屈、迈步，配合RFE专用工具。每次20-40分钟。</p></div>\n<div class=\"kp\"><h3>适应证</h3>\n<ul><li><b>适应证</b>：脑卒中后上肢手功能障碍，Brunnstrom II期以上最佳。</li>\n<li><b>禁忌</b>：急性期生命体征不稳、严重认知障碍、严重痉挛(Ashworth≥3)、严重骨质疏松。</li></ul>\n<div class=\"latest\"><b>本地资料：</b>《反复促通疗法（川平法）的理论与实践》PDF（宫本明2022主译）+ 上肢/下肢手法PPT + 36个中文实操视频。</div></div>", "assess": "\n<div class=\"kp\"><h3>MMT徒手肌力（Lovett 0-5级）<span class=\"tag\">必背</span></h3>\n<ul><li><b>0级</b>：无可见/可感收缩</li>\n<li><b>1级</b>：可触及轻微收缩，无关节活动</li>\n<li><b>2级</b>：消除重力下全ROM运动</li>\n<li><b>3级</b>：抗重力全ROM，不能抗阻</li>\n<li><b>4级</b>：抗重力+中等阻力</li>\n<li><b>5级</b>：正常，抗充分阻力</li></ul>\n<div class=\"latest\"><b>注意：</b>中枢神经损伤痉挛明显时不宜用MMT，应改用Brunnstrom/FMA。</div></div>\n<div class=\"kp\"><h3>Brunnstrom六期 <span class=\"tag\">必考</span></h3>\n<ul><li><b>Ⅰ期</b>：弛缓，无随意运动</li>\n<li><b>Ⅱ期</b>：出现痉挛、联合反应、极微弱收缩</li>\n<li><b>Ⅲ期</b>：可随意引起共同运动，痉挛达峰</li>\n<li><b>Ⅳ期</b>：出现分离运动，痉挛减轻</li>\n<li><b>Ⅴ期</b>：分离运动进一步改善</li>\n<li><b>Ⅵ期</b>：共同运动消失，协调速度近正常</li></ul></div>\n<div class=\"kp\"><h3>Fugl-Meyer评定(FMA)</h3>\n<p>基于Brunnstrom的定量评定，113小项，每项0/1/2分，<b>总分226分</b>：运动100（上肢66+下肢34）、平衡14、感觉24、关节活动44、疼痛44。</p></div>\n<div class=\"kp\"><h3>Barthel指数(BI) <span class=\"tag\">必考</span></h3>\n<p>10项PADL，总分100：0-20极严重缺陷；25-45严重；50-70中度；75-95轻度；100完全自理。</p></div>\n<div class=\"kp\"><h3>FIM功能独立性</h3>\n<p>18项（运动13+认知5），每项7级，总分126：7完全独立/6有条件独立/5监护/4最小帮助(用力≥75%)/3中等(50-74%)/2最大(25-49%)/1完全依赖。儿童用WeeFIM。</p></div>\n<div class=\"kp\"><h3>其他量表</h3>\n<ul><li>改良Ashworth(MAS)：0/1/1+/2/3/4六级评痉挛</li>\n<li>Carr平衡、上田氏平衡、BBS、TUG</li>\n<li>Gesell发育、Bender视知觉、Rey-Osterrieth复杂图形</li>\n<li>ASIA脊髓损伤分级：A完全/B感觉不全/C运动不全关键肌&lt;3级/D≥3级/E正常</li></ul></div>", "gait": "\n<div class=\"kp\"><h3>外周神经损伤步态</h3>\n<ul><li><b>臀大肌步态（鹅步）</b>：伸髋无力，支撑相躯干后仰、腰前凸，前后摆动大。</li>\n<li><b>臀中肌步态（鸭步/Trendelenburg）</b>：支撑相骨盆向患侧下沉&gt;5°，双侧受累左右摇晃如鸭行。</li>\n<li><b>屈髋肌无力</b>：步幅明显缩短。</li>\n<li><b>股四头肌无力</b>：支撑相膝过伸以韧带代偿。</li>\n<li><b>踝背伸无力（跨阈/跨栏步态）</b>：足下垂，摆动相过度屈髋屈膝把脚\"跨\"过去。</li></ul></div>\n<div class=\"kp\"><h3>中枢神经损伤步态 <span class=\"tag\">高频</span></h3>\n<ul><li><b>偏瘫划圈步态</b>：患侧下肢伸肌痉挛+足内翻下垂，摆动相骨盆抬高、髋外展外旋，患肢向外划半圈。</li>\n<li><b>剪刀步态（脑瘫/截瘫）</b>：内收肌痉挛，两下肢交叉前移，足尖着地。</li>\n<li><b>共济失调步态</b>：步宽加大、左右摇晃如醉汉。</li>\n<li><b>帕金森慌张步态</b>：前倾、小碎步、越走越快、不能立即停。</li></ul>\n<div class=\"latest\"><b>临床思路：</b>先判责任期（支撑/摆动）→责任肌→反推神经平面。</div></div>", "dysphagia": "\n<div class=\"kp\"><h3>正常吞咽三时相</h3>\n<ul><li><b>口腔期</b>（随意）：唇闭锁、舌搅拌、形成食团</li>\n<li><b>咽期</b>（反射）：软腭上抬、喉上提、会厌反折、环咽肌开放</li>\n<li><b>食管期</b>：食管蠕动送入胃</li></ul></div>\n<div class=\"kp\"><h3>洼田饮水试验 <span class=\"tag\">必考</span></h3>\n<p>坐位饮30ml温水观察：</p>\n<ul><li><b>Ⅰ级</b>：一次喝完无呛咳（5秒内正常）</li>\n<li><b>Ⅱ级</b>：分两次喝完无呛咳（可疑）</li>\n<li><b>Ⅲ级</b>：一次喝完但呛咳</li>\n<li><b>Ⅳ级</b>：分两次以上喝完且呛咳</li>\n<li><b>Ⅴ级</b>：屡屡呛咳难以喝完</li></ul></div>\n<div class=\"kp\"><h3>反复唾液吞咽测试RSST</h3>\n<p>食指横置甲状软骨与舌骨间，嘱快速反复吞咽，记录30秒次数。正常≥3次，喉上抬充分。口干可舌面滴1ml水。</p></div>\n<div class=\"kp\"><h3>治疗技术 <span class=\"tag\">必背</span></h3>\n<ul><li><b>间接训练</b>：口颜面/唇舌/颌运动、声带内收、咳嗽、Shaker抬头、冰酸刺激</li>\n<li><b>直接训练</b>：坐直90°头前屈、食物增稠、一口量3-20ml</li>\n<li><b>门德尔松手法</b>：吞咽时主动保持喉上抬，扩大环咽肌开放</li>\n<li><b>声门上吞咽</b>：吞咽前屏气→吞咽→吞咽后立即咳嗽清除误吸</li>\n<li><b>用力吞咽</b>：用力吞咽增加舌骨上肌群收缩</li></ul>\n<div class=\"latest\"><b>金标准：</b>VFSS吞咽造影；FEES纤维内镜。并发症：卒中相关性肺炎、营养不良。</div></div>", "aphasia": "\n<div class=\"kp\"><h3>Benson失语分类 <span class=\"tag\">必考</span></h3>\n<h4>外侧裂周失语（共同特点：复述差）</h4>\n<ul><li><b>Broca失语（运动性/表达性）</b>：非流利电报式、理解相对好、复述差、病灶额下回后部。患者自知说不出，易抑郁。</li>\n<li><b>Wernicke失语（感觉性/接受性）</b>：流利但错语杂乱、理解极差、复述差、病灶颞上回后部。答非所问不自知。</li>\n<li><b>传导性失语</b>：流利、理解好、唯独复述极差（弓状束损伤）。</li></ul>\n<h4>分水岭失语（复述相对好）</h4>\n<ul><li>经皮质运动性(TCMA)、经皮质感觉性(TCSA)、经皮质混合性(MTCA)</li></ul>\n<h4>其他</h4>\n<ul><li><b>完全性失语</b>：听说读写全面严重受损</li>\n<li><b>命名性失语</b>：流利理解复述好，唯独命名不能（颞中回后部）</li></ul></div>\n<div class=\"kp\"><h3>常用评定</h3>\n<ul><li><b>BDAE波士顿</b>：5大项26分测验，全面但需2-3小时</li>\n<li><b>WAB西方失语成套</b>：1小时完成，算失语商AQ/操作商PQ/皮质商CQ</li>\n<li><b>SLTA日本标准</b>：听说读写计算26分测验</li>\n<li><b>ABC汉语失语检查法</b>：适合普通话</li></ul></div>\n<div class=\"kp\"><h3>治疗原则</h3>\n<p><b>Schuell刺激法</b>：强听觉刺激、多途径、反复、引出反应、正确强化。尽早开始、集中训练、结合日常。</p></div>", "dysarthria": "\n<div class=\"kp\"><h3>六种类型</h3>\n<ul><li><b>弛缓型</b>：下运动神经元（球麻痹），鼻音重、鼻漏气</li>\n<li><b>痉挛型</b>：上运动神经元（假性球麻痹），说话慢费力</li>\n<li><b>共济失调型</b>：小脑病变，节律异常爆发性语言</li>\n<li><b>运动过多型</b>：舞蹈症/肌张力障碍</li>\n<li><b>运动过少型</b>：帕金森，低平单调含糊</li>\n<li><b>混合型</b>：ALS、多发性硬化最常见</li></ul></div>\n<div class=\"kp\"><h3>Frenchay构音障碍评定 <span class=\"tag\">必考</span></h3>\n<p>8大项26分测验，9级评分：反射→呼吸→唇→颌→软腭→喉→舌→言语可理解度。观察静态与说话时运动，做鼓腮/咧嘴/伸舌/发a/i/u/读字读句。</p></div>\n<div class=\"kp\"><h3>训练要点</h3>\n<ul><li>呼吸：平稳呼气、一口气数到20</li>\n<li>口颜面：唇闭合/咧嘴/鼓腮/伸舌/卷舌/顶腮/下颌开合</li>\n<li>腭咽闭合：发\"啊\"、推掌发声减少鼻漏气</li>\n<li>发音语速：单音→音节→字词→句子</li>\n<li>代偿：放慢语速、加大音量、交流板</li></ul>\n<div class=\"latest\"><b>儿童功能性构音障碍</b>：本目录有14篇相关论文。</div></div>", "ptstroke": "\n<div class=\"kp\"><h3>五大神经促通技术</h3>\n<ul><li><b>Brunnstrom</b>：早期利用联合反应/共同运动诱发收缩，再训练分离</li>\n<li><b>Bobath(NDT)</b>：关键点控制+RIP抑制痉挛</li>\n<li><b>PNF</b>：螺旋对角模式促通</li>\n<li><b>Rood</b>：多感觉刺激（刷擦/冰/牵张/挤压）</li>\n<li><b>运动再学习MRP</b>：Carr/Shepherd，任务导向，日常动作拆解反复练习</li></ul></div>\n<div class=\"kp\"><h3>联合反应与共同运动 <span class=\"tag\">必考</span></h3>\n<ul><li><b>联合反应</b>：健肢用力时患肢不随意张力/运动。上肢：健肢屈→患肢屈；下肢Raimiste：健肢内收→患肢内收。</li>\n<li><b>上肢屈肌共同运动</b>：肩胛上提后缩、肩外展外旋、肘屈、前臂旋后、腕指屈</li>\n<li><b>上肢伸肌共同运动</b>：肩胛前伸下推、肩内收内旋、肘伸、前臂旋前</li>\n<li><b>下肢伸肌共同运动</b>：髋伸内收内旋、膝伸、踝跖屈内翻</li></ul>\n<div class=\"latest\"><b>临床意义：</b>Ⅲ期共同运动达峰，治疗目标是诱导Ⅳ-Ⅵ期分离运动，避免强化异常步态。</div></div>\n<div class=\"kp\"><h3>良肢位摆放</h3>\n<ul><li><b>仰卧位</b>：患侧肩垫枕前伸、肘伸腕背伸；髋垫枕防外旋、膝微屈、踝中立</li>\n<li><b>患侧卧位（最推荐）</b>：患侧上肢前伸肘伸掌心向上；患侧下肢伸，健腿屈髋屈膝垫枕</li>\n<li><b>健侧卧位</b>：患侧上肢垫枕前伸、下肢垫枕屈髋屈膝</li>\n<li>每2小时翻身防压疮挛缩</li></ul></div>\n<div class=\"kp\"><h3>肩手综合征(SHS)</h3>\n<p>卒中后1-3月高发：患肩痛、手水肿、皮温高、腕指活动受限。处理：避免牵拉患臂、抬高患肢、向心加压缠绕、冷热交替、必要时类固醇/星状神经节阻滞。</p></div>\n<div class=\"kp\"><h3>废用与误用综合征</h3>\n<ul><li><b>废用</b>：长期卧床致肌力下降、压疮、DVT、体位性低血压</li>\n<li><b>误用</b>：过早练走路、暴力牵拉致痉挛加重、划圈步态、肩痛</li>\n<li>痉挛管理：良肢位、被动牵伸、巴氯芬/替扎尼定、肉毒素、矫形器</li></ul></div>\n<div class=\"kp\"><h3>中医康复</h3>\n<p>本目录69篇PDF大量为针灸穴位埋线治疗中风偏瘫/失语/吞咽障碍/肩手综合征研究。常用穴：百会、长强、夹脊、肩髃、曲池、手三里、外关、合谷、环跳、阳陵泉、足三里、三阴交。</p></div>", "books": "\n<div class=\"kp\"><h3>核心教材</h3>\n<ul><li><b>《中国康复医学（第二版）》</b>：国内权威参考书</li>\n<li><b>《循序渐进——偏瘫患者的全面康复治疗（第2版）》</b>：Davies经典</li>\n<li><b>《实用PNF治疗·图解指南第4版》</b>：PNF实操</li>\n<li><b>CMSA（Chedoke-McMaster卒中评估）</b></li></ul></div>\n<div class=\"kp\"><h3>运动损伤与康复</h3>\n<ul><li>《运动损伤临床指南》《运动伤害图解圣经》</li>\n<li>《运动损伤康复治疗学（王予彬）》</li>\n<li>《运动损伤的评估与康复训练全书（2023全彩）》</li>\n<li>《运动康复指导·初级（邹志红2023）》</li></ul></div>\n<div class=\"kp\"><h3>NSCA体能训练体系</h3>\n<ul><li>《NSCA体能训练概论》《NSCA私人教练基础》</li>\n<li>《体能训练设计指南》《动态拉伸》《核心区训练》《灵敏训练》</li>\n<li>《运动员恢复指南》《运动员的时钟》</li></ul>\n<div class=\"latest\"><b>使用建议：</b>这些PDF多为几百MB彩图扫描版，适合查图查章；本知识库已把对应知识点提取成速查卡片。</div></div>"};
+
+const DISEASES = {"stroke": {"name": "脑卒中（中风）", "overview": "急性脑血管事件后，按WHO标准：生命体征平稳、神经症状不再进展48小时后开始康复。中国指南推荐三级康复：急性期（14天内）→恢复期（2周-6月）→慢性期（6月后）。", "stages": [{"phase": "急性期（发病后14天内，一级康复）", "time": "卧床期，多在神经内科/急诊室", "assessment": ["入院24小时内首次评定：NIHSS神经功能缺损、意识(GCS)、吞咽(洼田饮水/VFSS)、皮肤、DVT风险、情绪", "卧床期每日床边评定：关节活动度、肌张力、良肢位是否正确", "发病72小时内：生命体征稳定后开始床边康复介入"], "treatment": ["良肢位摆放：患侧卧位为主，每2小时翻身一次", "关节被动活动：从近端到远端，每日2次，每次每个关节5-10遍", "床上体位转换：辅助翻身、床上坐起训练", "早期床边坐位：从30°→60°→90°，每次5-10分钟开始", "呼吸排痰：腹式呼吸、辅助咳嗽，预防坠积性肺炎", "吞咽管理：禁食或调整食物性状，防止误吸", "DVT预防：踝泵运动、弹力袜、必要时低分子肝素"]}, {"phase": "恢复期早期（2周-3月，二级康复）", "time": "转入康复医学科/康复中心，此阶段恢复最快", "assessment": ["转入后首次全面评定：Fugl-Meyer(FMA)、Brunnstrom分期、MAS、Berg平衡、BI指数", "每2周复评一次：FMA、BI，调整治疗方案", "发病1月时中期评定：判断恢复趋势、预后预测"], "treatment": ["床上训练：桥式运动、床上移动、翻身训练", "坐位平衡：一级(静态)→二级(自动态)→三级(他动态)", "站位训练：辅助站立→独站→患侧单腿负重", "步行训练：平行杠内→助行器→独立步行；减重步行训练(BWSTT)", "上肢训练：Brunnstrom/PNF/Bobath手法、强制运动疗法(CIMT)、川平法(RFE)", "物理因子：神经肌肉电刺激(NMES)、肌电生物反馈、rTMS经颅磁刺激", "作业治疗：ADL训练(穿衣/进食/如厕)、手功能精细动作", "言语吞咽：Schuell刺激法、门德尔松手法、Shaker训练"]}, {"phase": "恢复期后期-慢性期（3月以后，三级康复）", "time": "社区/家庭康复，终身管理", "assessment": ["发病3月、6月时复评：FMA、BI、FIM、生活质量(SF-36)", "跌倒风险：TUG计时起立行走、Berg平衡", "抑郁筛查：PHQ-9"], "treatment": ["强化残存功能：步行耐力、上下楼梯、户外行走", "ADL独立训练：做饭、购物、家务", "职业康复：回归工作岗位的适应性训练", "维持训练：每日30-60分钟有氧+力量，防止功能倒退", "家庭环境改造：扶手、防滑、坡道"]}], "complications": ["压疮：每2h翻身、减压床垫、保持皮肤干燥", "肩痛/肩关节半脱位/肩手综合征：早期避免牵拉患肩、良肢位、NMES电刺激", "DVT：踝泵、弹力袜、低分子肝素", "关节挛缩：持续被动活动、早期床上训练", "跌倒：平衡训练、环境改造", "吸入性肺炎：吞咽筛查、体位进食", "卒中后抑郁：PHQ-9筛查、心理干预"], "notes": ["生命体征稳定48小时后开始，避免早期高强度训练", "禁止用力牵拉患肩、禁止双手高举滑轮动作", "痉挛期避免暴力被动牵伸", "训练中头晕、胸痛、血压骤升立即停止", "家属教育与家庭训练同等重要"], "refs": [{"title": "中国脑卒中康复治疗指南(2011完全版)", "author": "中华医学会神经病学分会", "url": "https://guide.medlive.cn/guideline/3387"}, {"title": "中国脑卒中早期康复治疗指南", "author": "中华医学会", "url": "https://rs.yiigle.com/cmaid/992228"}, {"title": "中国脑血管病临床管理指南(第2版)·康复管理", "author": "中华医学会神经病学分会", "url": "https://d.wanfangdata.com.cn/periodical/zgzzzz202309010"}, {"title": "中国脑梗死急性期康复专家共识", "author": "中国康复医学会", "url": "https://rs.yiigle.com/cmaid/896949"}, {"title": "助行功能性电刺激技术临床操作指南", "author": "陈汉波、燕铁斌等", "url": "https://rs.yiigle.com/cmaid/1490770"}, {"title": "失语症康复治疗中国专家共识", "author": "中国康复医学会", "url": "https://rs.yiigle.com/cmaid/1089411"}, {"title": "吞咽障碍康复专家共识", "author": "中国康复医学会", "url": "https://guide.medlive.cn/guideline/12909"}], "brunnstrom": [{"stage": "Ⅰ期（弛缓期）", "time": "发病后数日-2周", "sign": "患侧上下肢完全弛缓性瘫痪，肌张力低下，腱反射减弱或消失，无任何随意运动", "assessment": ["MMT肌力0级", "肌张力Ashworth 0级", "Brunnstrom分期判断"], "treatment": ["良肢位摆放，每2h翻身，预防压疮和关节挛缩", "被动关节活动度训练：从近端到远端，每日2次，每个关节5-10遍", "床上体位转换：辅助翻身、床上坐起", "早期床边坐位训练：从30°→60°→90°", "物理因子：神经肌肉电刺激(NMES)防止肌萎缩", "DVT预防：踝泵运动、弹力袜"]}, {"stage": "Ⅱ期（痉挛期开始）", "time": "发病后2周-1月", "sign": "肌张力开始增高，出现联合反应和共同运动，肌腱反射开始恢复，可触及肌肉轻微收缩但不能引起关节活动", "assessment": ["Ashworth开始增高(1级)", "出现联合反应/共同运动", "MMT 1-2级"], "treatment": ["Bobath反射抑制模式(RIP)：对抗痉挛姿势", "关键点控制：操作胸骨/肩带/骨盆抑制异常张力", "床上主动辅助运动：桥式运动、上肢上举", "早期坐位平衡一级训练", "物理因子：TENS镇痛、肌电生物反馈", "避免过度牵伸痉挛肌"]}, {"stage": "Ⅲ期（联带运动达峰）", "time": "发病后1-2月", "sign": "痉挛达高峰，可随意引起共同运动(上肢屈肌/下肢伸肌模式)，腱反射亢进", "assessment": ["Ashworth 2-3级", "可随意引发共同运动", "坐位/站位平衡训练"], "treatment": ["利用共同运动训练：上肢上举(屈肌共同运动)、下肢站立(伸肌共同运动)", "PNF对角线模式：促进分离运动", "坐位平衡二级训练", "站位训练：辅助站立、患侧下肢负重", "上肢：肩胛带活动、肘屈/伸训练", "下肢：屈膝、踝背屈训练"]}, {"stage": "Ⅳ期（分离运动开始）", "time": "发病后2-3月", "sign": "痉挛开始减轻，出现脱离共同运动的分离运动：上肢可后伸肩、肘伸时前臂旋前、手背可触及腰骶部", "assessment": ["Ashworth下降至1-2级", "出现分离运动", "Berg平衡"], "treatment": ["上肢训练：手背触腰、上肢外展90°伸肘", "下肢训练：坐位屈膝90°后踝背屈、坐位足跟向前滑行", "站位平衡三级训练", "步行训练：平行杠内→助行器", "作业治疗：ADL训练(穿衣/进食)"]}, {"stage": "Ⅴ期（分离运动加强）", "time": "发病后3-4月", "sign": "痉挛明显减轻，分离运动充分：上肢可外展90°伸肘、前臂旋前旋后；下肢可站立位屈膝、踝背屈", "assessment": ["Ashworth 0-1级", "分离运动充分", "步行能力评定"], "treatment": ["上肢：上肢上举过头、前臂旋前旋后、手抓握/放松", "下肢：单腿站立、上下台阶训练", "独立步行、 outdoor步行训练", "精细动作：手指屈伸、对指、对掌", "ADL独立训练"]}, {"stage": "Ⅵ期（接近正常）", "time": "发病后4-6月及以后", "sign": "共同运动完全消失，痉挛基本消失，各关节可单独运动，协调运动接近正常，速度和准确性稍差", "assessment": ["FMA接近满分", "BI>95", "TUG正常", "协调试验"], "treatment": ["精细协调训练：指鼻、轮替、对指", "速度和耐力训练：快步走、上下楼梯", "复杂ADL：做饭、购物、家务", "职业康复：回归工作岗位", "维持训练：每日30-60分钟运动"]}]}, "sci": {"name": "脊髓损伤(SCI)", "overview": "按伤后时间分四期：急诊处置期→急性期(3周内)→稳定期(3周-3月)→回归社会期(3月后)。按ASIA残损分级A-E判断完全/不完全。", "stages": [{"phase": "急诊处置期（受伤现场-入院）", "time": "ABCS快速评估", "assessment": ["ABCS顺序：气道A、呼吸B、循环C、脊柱脊髓S", "按ISNCSCI国际标准：确定感觉平面、运动平面、神经平面、损伤程度、ASIA分级", "鞍区感觉检查判断完全/不完全损伤"], "treatment": ["正确搬运：3-4人平托，保持脊柱轴线，颈椎损伤头颈固定", "优先处理危及生命的并发症", "甲泼尼龙冲击治疗(伤后8小时内，符合指征)"]}, {"phase": "急性期（伤后3周内）", "time": "床边康复，预防并发症", "assessment": ["每日神经功能监测：感觉平面、运动平面有无变化", "并发症筛查：压疮、DVT、肺部感染、泌尿系感染", "伤后1周复评ASIA分级"], "treatment": ["床上良肢位：保持髋关节伸展、踝关节功能位(防足下垂)", "全身关节被动活动：每日2次，防止关节挛缩", "残存肌力训练：损伤平面以上肌肉主动抗阻", "呼吸排痰训练：高位损伤做腹式呼吸、辅助咳嗽", "膀胱管理：留置导尿→间歇性导尿", "压疮预防：每2h翻身、减压床垫"]}, {"phase": "稳定期/恢复期（3周-3月）", "time": "离床康复，学会代偿", "assessment": ["转入康复中心全面评定：ASIA分级、SCIM独立性、FIM、肺功能、尿流动力学", "每月复评一次：肌力、ADL、平衡能力"], "treatment": ["肌力训练：强化上肢、躯干残存肌肉，为使用轮椅做准备", "坐位平衡：从有支撑到无支撑，三级平衡", "转移训练：床-轮椅、轮椅-坐厕、轮椅-汽车", "轮椅操作：前进/后退/转弯/过障碍", "步态训练：根据损伤平面选择KAFO/HKAFO、减重跑台、外骨骼机器人", "膀胱直肠训练：间歇性导尿定时排尿、直肠排便训练", "物理因子：功能性电刺激(FES)、脉冲电磁场预防骨质疏松"]}, {"phase": "回归社会期（3月以后）", "time": "社区/家庭，职业与心理康复", "assessment": ["回归前评定：家居环境评估、职业能力评估、心理状态", "每3月随访：并发症监测、装备调试"], "treatment": ["家居无障碍改造：坡道、扶手、宽门", "职业康复：适应性工作训练", "心理康复：接受残疾、重建生活信心", "长期并发症管理：压疮、泌尿系感染、痉挛、疼痛"]}], "complications": ["压疮：每2h翻身、减压坐垫，Ⅲ-Ⅳ度需手术", "DVT：伤后2周高发，弹力袜+气压泵+低分子肝素", "泌尿系感染：间歇性导尿、不滥用抗生素", "肺部感染：高位损伤翻身叩背、呼吸肌训练", "自主神经反射异常(T6以上)：血压骤升头痛，立即坐位解除诱因", "骨质疏松/异位骨化：双膦酸盐、FES、脉冲电磁场", "痉挛：巴氯芬/替扎尼定、肉毒毒素"], "notes": ["脊柱不稳定期严格制动，佩戴支具后再训练", "高位颈髓损伤注意呼吸和体温调节", "轮椅压力每次≤2h，每30分钟做减压动作", "间歇导尿严格无菌，记录出入量", "避免皮肤冷热刺激致烫伤"], "refs": [{"title": "创伤性脊柱脊髓损伤康复治疗专家共识(2020版)", "author": "中国康复医学会", "url": "https://rs.yiigle.com/cmaid/1205255"}, {"title": "脊髓损伤康复治疗临床实践指南", "author": "中华医学会物理医学与康复学分会", "url": "https://www.hnysfww.com/data/article/1668102339765619453.pdf"}, {"title": "脊髓损伤水疗康复中国专家共识", "author": "中国医师协会康复医师分会", "url": "https://guide.medlive.cn/guideline/17136"}]}, "cp": {"name": "脑性瘫痪(CP)", "overview": "0-6岁是脑可塑性黄金期，按GMFCS分级(Ⅰ-Ⅴ)判断粗大运动受限程度。强调早诊断、早治疗、游戏化训练。", "stages": [{"phase": "超早期（0-1岁，中枢协调障碍期）", "time": "Vojta疗法最佳介入窗口", "assessment": ["0-6月：Gesell发育量表、Vojta姿势反射检查", "6-12月：GMFM-88、肌张力检查(MAS/Tardieu)", "高危儿随访：早产儿、缺氧缺血性脑病、胆红素脑病"], "treatment": ["Vojta疗法：反射性俯爬(R-K)、反射性翻身(R-U)，每日3-4次，每次10-15分钟", "Bobath疗法：关键点控制、反射抑制模式", "日常姿势管理：正确抱姿、睡姿、喂养姿势", "家庭干预指导：家长学会每天在家做"]}, {"phase": "早期（1-3岁）", "time": "运动发育关键期", "assessment": ["每3月复评：GMFM、MACS手功能分级、MAS", "髋关节超声监测：防止髋关节脱位", "伴随问题筛查：听力、视力、癫痫、智力"], "treatment": ["Bobath+Vojta联合治疗，每日训练1-2小时", "物理因子：神经肌肉电刺激、水疗(水温36-38℃)", "作业治疗：精细动作、手眼协调", "言语治疗：构音、吞咽、语言发育", "矫形器：AFO踝足矫形防尖足、坐姿保持椅"]}, {"phase": "学龄前期（3-6岁）", "time": "功能强化期", "assessment": ["每半年复评：GMFM、WeeFIM、COPM", "评估入学准备能力", "肌痉挛评估：Tardieu量表决定是否肉毒毒素注射"], "treatment": ["运动疗法：站立、行走、上下楼梯训练", "A型肉毒毒素注射：缓解痉挛型肌张力", "选择性脊神经后根切断术(SDR)：重度痉挛型", "矫形外科手术：跟腱延长、内收肌松解", "融合教育准备：认知、社交、生活自理训练"]}, {"phase": "学龄期及以后（6岁+）", "time": "代偿与社会参与", "assessment": ["每年复评：GMFM、ADL、骨骼发育(脊柱侧弯、髋关节)", "职业能力评估"], "treatment": ["维持训练：每天坚持运动，防止挛缩加重", "辅助器具：助行器、轮椅、交流板", "职业康复与社会参与"]}], "complications": ["关节挛缩畸形：持续牵伸、矫形器", "髋关节脱位：定期X线监测、内收肌松解", "癫痫：药物控制", "吞咽障碍/营养不良：饮食调整", "心理行为问题：早期干预、融合教育"], "notes": ["越早干预效果越好，0-3岁是黄金期", "训练要游戏化、短时间多次，避免患儿疲劳抗拒", "严禁暴力牵拉痉挛肌群", "家长训练与机构训练同等重要", "定期评估调整方案，关注生长发育变化"], "refs": [{"title": "儿童脑性瘫痪运动障碍的康复建议", "author": "中国康复医学会", "url": "https://rs.yiigle.com/cmaid/1182391"}, {"title": "儿童康复学(教材)", "author": "人民卫生出版社", "url": ""}]}, "pd": {"name": "帕金森病(PD)", "overview": "中脑黑质多巴胺能神经元退行性变，表现静止性震颤、肌强直、运动迟缓、姿势步态异常。按Hoehn-Yahr分期(1-5期)。", "assessment": ["分期：Hoehn-Yahr 1-5期", "运动：UPDRS统一帕金森评定量表、Berg平衡、TUG", "步态：步长、步速、冻结步态次数、起立-行走", "ADL：Schwab-England ADL量表", "认知：MoCA；情绪：HAMD/HAMA"], "treatment": ["放松与呼吸训练：腹式呼吸5-15分钟，缓解肌强直", "关节活动度：躯干四肢全范围主动/被动，重点牵伸屈曲肌群", "肌力训练：核心肌群、四肢近端渐进抗阻", "姿势训练：姿势镜抗重力伸展，矫正躯干屈曲", "平衡训练：三级平衡(静态/自动态/他动态)、平衡板/垫/仪", "步态训练：抬头挺胸、足跟先着地、高抬腿踏步、双臂摆动、跨越地面线条(视觉提示)、听节拍行走", "双重任务训练：步行同时完成认知/运动任务", "面肌训练：皱眉、鼓腮、露齿、吹哨，改善面具脸", "手功能：够取、抓握、扣纽扣、使用餐具", "物理因子：热水浴、按摩缓解肌强直；rTMS辅助", "药物：复方左旋多巴、多巴胺受体激动剂；中晚期DBS脑深部电刺激"], "complications": ["跌倒：冻结步态是摔跤首因，环境防滑、助行器、报警装置", "关节挛缩：持续牵伸、全范围ROM训练", "便秘/体位性低血压：饮水、高纤维、缓慢体位变换", "认知下降/痴呆：MoCA监测、认知训练", "抑郁/焦虑：心理干预、药物"], "notes": ["训练在服药后药效开期进行，关期减少高强度训练", "冻结步态：视觉提示(地面画线/激光笔)、听口令、踏步、跨越障碍", "避免快速体位变换，防止体位性低血压跌倒", "持之以恒，每天规律训练比单次大量更有效", "中晚期卧床者定时翻身防压疮"], "refs": [{"title": "中国帕金森病治疗指南(第四版)", "author": "中华医学会神经病学分会", "url": "https://rs.yiigle.com/cmaid/1300791"}, {"title": "帕金森病康复中国专家共识", "author": "中国康复医学会", "url": "https://guide.medlive.cn/guideline/15389"}]}, "aphasia": {"name": "失语症", "overview": "脑损伤导致语言中枢受损，出现听/说/读/写障碍。分为Broca(运动性)、Wernicke(感觉性)、命名性、完全性等。", "assessment": ["波士顿诊断性失语症检查(BDAE)：失语症严重程度0-5级", "汉语失语成套测验(ABC)", "西方失语症成套测验(WAB)：失语商(AQ)", "简易精神状态检查(MMSE)排除痴呆"], "treatment": ["Broca失语(运动性)：构音训练、旋律语调治疗(MIT)、命名训练", "Wernicke失语(感觉性)：听理解训练、手势+图卡、减少环境噪音", "完全性失语：交流板、AAC辅助沟通系统", "Schuell刺激法：强听觉刺激、多途径刺激、反复刺激", "计算机辅助训练：每日1-2小时", "家庭训练：家属用简短句子、面对面交流"], "complications": ["交流障碍致抑郁/社交隔离", "误用语言致误解"], "notes": ["训练要短时间多次，每次30分钟", "家属避免替患者说话", "鼓励用手势/写字辅助"], "refs": [{"title": "失语症康复治疗中国专家共识", "author": "中国康复医学会", "url": "https://rs.yiigle.com/cmaid/1089411"}]}, "dysphagia": {"name": "吞咽障碍", "overview": "脑卒中、脑外伤、帕金森等常见并发症。30%-65%卒中患者合并吞咽障碍，是误吸性肺炎主因。", "assessment": ["床旁筛查：洼田饮水试验(Ⅰ-Ⅴ级)", "仪器检查：视频透视吞咽检查(VFSS)、纤维内镜吞咽检查(FEES)", "反复唾液吞咽测试(RSST)", "误吸风险评估"], "treatment": ["基础训练：口面肌群运动、舌操、咀嚼训练", "摄食训练：体位(30°半坐卧)、食物性状(糊状→泥状→软饭→普食)", "门德尔松手法：吞咽时喉上抬保持2-3秒", "Shaker训练：抬头训练增强上食管括约肌开放", "冷刺激：冰棉签刺激咽反射", "电刺激：VitalStim神经肌肉电刺激", "代偿性策略：低头吞咽、点头样吞咽、空吞咽"], "complications": ["误吸性肺炎", "营养不良/脱水", "窒息"], "notes": ["进食时保持清醒、坐位30分钟以上", "床旁备吸引器", "呛咳剧烈立即停止进食"], "refs": [{"title": "吞咽障碍康复专家共识", "author": "中国康复医学会", "url": "https://guide.medlive.cn/guideline/12909"}]}, "dysarthria": {"name": "构音障碍", "overview": "中枢/周围神经损伤致发音器官肌肉麻痹、无力或不协调，表现为发音不清、鼻音过重、语调异常。分弛缓型/痉挛型/共济失调型/运动过多型/运动减少型/混合型。", "assessment": ["Frenchay构音障碍评定法：8个项目26分测验", "构音障碍检查：反射、呼吸、唇、颌、软腭、喉、舌、言语", "语音清晰度测试", "声学分析：最长发音时间MPT、共振峰"], "treatment": ["口部运动训练：唇舌颌咀嚼力量练习", "呼吸训练：腹式呼吸、呼气控制", "发音训练：从单音→字词→句子", "鼻音控制：鼻吹气镜、感知训练", "语调语调训练：重音、停顿", "代偿：交流板、AAC辅助"], "complications": ["交流障碍致社交退缩"], "notes": ["每天短时间多次训练", "结合口语家庭练习"], "refs": [{"title": "构音障碍康复中国专家共识", "author": "中国康复医学会", "url": ""}]}, "gait": {"name": "异常步态分析", "overview": "正常步态：支撑相60%+摆动相40%，步长50-70cm、步宽8-10cm、步频100-110步/分、步速1.2-1.4m/s。以下为临床常见异常步态及对应责任肌/神经。", "assessment": ["观察：从助行器→独立步行，正面/侧面/背面三个角度", "测量：步长、步宽、步频、步速", "分析：支撑相、摆动相、双支撑相", "对应：异常姿态→责任肌→神经节段"], "treatment": ["针对责任肌强化肌力训练", "纠正异常步态模式：减重步行训练、运动再学习", "矫形器：AFO足下垂、KAFO膝不稳", "外骨骼机器人：脊髓损伤步态训练", "助行器：四脚拐、前臂杖、轮椅"], "complications": ["跌倒风险增高", "膝踝疼痛", "关节退变"], "notes": ["先评定责任肌再训练", "避免形成错误代偿步态", "注意患者合并感觉障碍"], "gaits": [{"name": "划圈步态（偏瘫步态）", "cause": "脑卒中/脑外伤后偏瘫", "sign": "患侧上肢屈曲内收、下肢伸直外旋，迈步时患侧骨盆抬高、下肢向外划半圆", "muscle": "下肢伸肌痉挛，股四头肌/小腿三头肌痉挛"}, {"name": "剪刀步态", "cause": "脑瘫痉挛型/脊髓损伤", "sign": "双下肢内收内旋，双膝互相靠拢交叉行走，步幅小", "muscle": "内收肌群痉挛（闭孔神经）"}, {"name": "鸭步（Trendelenburg步态）", "cause": "臀中肌麻痹/髋内翻", "sign": "行走时骨盆向健侧倾斜，躯干向患侧左右摇摆如鸭行", "muscle": "臀中肌/臀小肌（臀上神经L4-S1）"}, {"name": "跨阈步态", "cause": "腓总神经麻痹/足下垂", "sign": "患侧髋膝过度屈曲抬高大腿，足尖下垂拍地如跨门槛", "muscle": "胫骨前肌/趾长伸肌（腓总神经L4-S2）"}, {"name": "慌张步态（前冲步态）", "cause": "帕金森病", "sign": "身体前倾、步小而快、越走越快不能骤停，伴躯干僵硬", "muscle": "肌张力增高、姿势反射障碍"}, {"name": "醉酒步态（蹒跚步态）", "cause": "小脑病变/酒精中毒", "sign": "行走时重心不稳、左右摇晃如醉汉，不能走直线", "muscle": "小脑共济失调"}, {"name": "感觉性共济失调步态", "cause": "脊髓后索病变/脊髓痨", "sign": "闭眼不能站立（Romberg+），睁眼尚可、闭眼摇晃，落脚不知深浅", "muscle": "本体感觉障碍"}, {"name": "剪刀步态+马蹄内翻足", "cause": "脑瘫痉挛型", "sign": "足尖着地、内翻、双膝交叉", "muscle": "小腿三头肌/胫骨后肌痉挛"}, {"name": "短腿步态", "cause": "下肢短缩/髋膝踝挛缩", "sign": "患侧缩短，健侧足跟抬起或患侧骨盆下沉", "muscle": "双下肢不等长"}, {"name": "股四头肌步态", "cause": "股四头肌无力", "sign": "行走时手撑大腿、身体前倾，使膝过伸稳定", "muscle": "股四头肌（股神经L2-4）"}, {"name": "臀大肌步态（鹅步）", "cause": "臀大肌无力", "sign": "躯干后仰、挺腹、髋过伸", "muscle": "臀大肌（臀下神经L5-S2）"}, {"name": "臀中肌步态（鸭步）", "cause": "臀中肌无力", "sign": "支撑相骨盆向对侧下沉、躯干向患侧倾斜", "muscle": "臀中肌（臀上神经）"}, {"name": "疼痛步态（减痛步态）", "cause": "髋/膝/踝疼痛", "sign": "患侧支撑相缩短、尽快换健侧负重", "muscle": "关节病变"}, {"name": "功能性步态失用", "cause": "卒中后", "sign": "下肢肌力正常但不能走路", "muscle": "运动计划障碍"}], "refs": [{"title": "步态分析与临床应用", "author": "人民卫生出版社", "url": ""}]}, "peripheral": {"name": "周围神经病损", "overview": "周围神经损伤后出现所支配区域运动、感觉、自主神经障碍。常见：面神经麻痹、桡神经麻痹、坐骨神经痛、糖尿病周围神经病变。", "assessment": ["运动：MMT肌力、ROM、有无畸形(腕下垂/足下垂)", "感觉：触觉、痛觉、温度、两点辨别觉", "电生理：肌电图(EMG)、神经传导速度(NCV)", "ADL：FIM、BI"], "treatment": ["病因治疗：解除压迫(手术松解)、控制血糖、抗病毒", "运动疗法：被动/主动运动、防止关节挛缩、肌力训练", "物理因子：TENS镇痛、NMTS神经肌肉电刺激、红外线、蜡疗、超声波、激光", "作业治疗：ADL训练、矫形器(腕托/踝足矫形AFO)", "感觉再教育：脱敏训练、触觉定位训练", "面神经麻痹：面肌按摩、表情肌训练、护眼(眼睑闭合不全)"], "complications": ["关节挛缩：被动ROM、矫形器", "肌肉萎缩：电刺激、肌力训练", "感觉丧失致烫伤/压伤：教育患者保护患肢", "眼睑闭合不全致角膜炎：眼膏、眼罩"], "notes": ["神经再生速度约1mm/天，需耐心长期训练", "感觉丧失区域注意防烫伤、冻伤、外伤", "糖尿病周围神经病变者每日检查足部", "避免过度疲劳和再次损伤"], "refs": [{"title": "中国康复医学(第二版)", "author": "人民卫生出版社", "url": ""}]}, "amputee": {"name": "截肢后康复", "overview": "截肢后需尽快安装假肢并训练代偿功能，目标是恢复独立步行和ADL。", "assessment": ["残肢：长度、关节活动度、皮肤、残肢痛/幻肢痛", "残肢定型：周径测量、是否适合接受腔", "平衡、步行能力、ADL", "心理：接受度、抑郁筛查"], "treatment": ["术后早期：残肢弹力绷带包扎消肿、保持残肢良好体位(防屈曲挛缩)、抬高患肢", "残肢塑形：硬质敷料、临时假肢早期负重", "肌力训练：臀大肌、股四头肌、核心、健侧肢体", "关节活动：髋膝关节全范围，防止挛缩", "平衡与步态：平行杠内→助行器→手杖→独立步行", "假肢使用：穿脱假肢、残肢护理、轮椅转移", "物理因子：TENS缓解幻肢痛、超声波软化瘢痕"], "complications": ["残肢关节挛缩(髋屈/膝屈)：持续牵伸、良好体位", "残肢痛/幻肢痛：TENS、镜像疗法、药物", "残肢皮肤破溃/滑囊炎：保持清洁、合适接受腔", "髋关节/腰椎代偿性劳损：姿势训练、肌力平衡"], "notes": ["残肢每日清洗擦干，检查皮肤", "弹力绷带正确缠绕，夜间不松", "术后尽早安装临时假肢，促进残肢定型", "循序渐进负重，避免接受腔磨破皮肤"], "refs": [{"title": "中国康复医学(第二版)", "author": "人民卫生出版社", "url": ""}]}, "cervical": {"name": "颈椎病", "overview": "颈椎间盘退变及其继发椎间关节退变，刺激/压迫脊髓、神经根、椎动脉、交感神经。分颈型/神经根型/脊髓型/椎动脉型/交感型。", "assessment": ["症状：颈肩痛、上肢放射痛、麻木、头晕、行走踩棉感", "体征：压顶试验、臂丛牵拉试验、椎间孔挤压试验", "肌力、感觉、反射、病理征(Hoffmann)", "影像学：X线(正侧位/斜位/动力位)、MRI", "VAS疼痛评分、NDI颈椎功能障碍指数"], "treatment": ["牵引：坐位枕颌布带牵引，重量自身体重10%-20%，起始3-4kg，每次20-30min，10-15次一疗程", "物理因子：超短波、调制中频、红外线、超声波、磁疗、直流电药物离子导入", "手法：麦肯基(McKenzie)自我整复、Mulligan关节松动、推拿放松", "运动疗法：颈深屈肌训练、肩胛稳定性训练、颈椎活动度、姿势矫正", "药物：NSAIDs消炎镇痛、营养神经", "手术：脊髓型颈椎病保守无效需手术"], "complications": ["脊髓型颈椎病加重：四肢麻木、行走不稳、大小便障碍，及时手术", "手法不当致椎动脉损伤/骨折", "牵引过重致症状加重"], "notes": ["脊髓型颈椎病禁忌重手法推拿和旋转复位", "牵引中出现头晕、恶心加重立即停止", "避免长时间低头、高枕、久坐", "家庭牵引需医生指导，有人陪伴", "急性期以休息消炎为主，缓解期才训练"], "refs": [{"title": "中国康复医学(第二版)", "author": "人民卫生出版社", "url": ""}]}, "shoulder": {"name": "肩关节周围炎(肩周炎)", "overview": "肩关节囊粘连性炎症，分疼痛期(2-9月)、僵硬期(4-12月)、恢复期(5-24月)。以疼痛和活动受限为特征。", "assessment": ["疼痛：VAS评分", "关节活动度：前屈、外展、内外旋(与健侧对比)", "肌力：MMT", "Constant-Murley肩关节评分", "排除肩袖损伤、肩峰撞击、颈椎病"], "treatment": ["疼痛期(急性期)：消炎镇痛、冷疗、TENS、超短波、温和钟摆运动，避免剧烈牵拉", "僵硬期：关节松动术(Maitland Ⅰ-Ⅳ级)、超声波、冲击波、被动牵伸、爬墙运动、棍棒操", "物理因子：超声波、体外冲击波、低能量激光、脉冲电磁场、蜡疗", "运动：钟摆运动、爬墙、棍棒操、毛巾操，无痛范围内主动活动", "封闭：关节腔类固醇注射+活动训练，短期(4-6周)效果好", "手术：关节镜下松解术用于顽固病例"], "complications": ["关节活动进一步受限：坚持无痛范围内活动", "三角肌/冈上肌萎缩：肌力训练", "过度暴力推拿致骨折/肩袖撕裂"], "notes": ["分阶段治疗：疼痛期不强行掰肩，僵硬期才重点牵伸", "避免提重物、反复上举过顶动作", "家庭锻炼每日坚持，比单次医院治疗更重要", "大多数有自限性，1-2年可缓解，积极康复可缩短病程"], "refs": [{"title": "老年性肩周炎中医全周期康复广东专家共识(2026)", "author": "广东省康复医学会", "url": "https://d.wanfangdata.com.cn/periodical/gzyy202604002"}]}, "lumbar": {"name": "腰椎间盘突出症", "overview": "椎间盘退变破裂压迫神经根，出现腰腿痛、下肢放射痛、麻木。好发L4-5、L5-S1。", "assessment": ["症状：腰痛伴下肢放射痛、咳嗽/喷嚏加重", "体征：直腿抬高试验(Laseque)、加强试验、肌力感觉反射", "影像学：腰椎MRI(确诊)、X线、CT", "VAS疼痛、ODI功能障碍指数、JOA评分"], "treatment": ["急性期：卧床休息(不超过1-2周)、NSAIDs消炎镇痛、神经根水肿期脱水", "牵引：骨盆牵引，屈髋屈膝位，持续/间歇牵引，重量约体重1/3，每次20-30min", "物理因子：干扰电、中频电、超短波、热敷、冲击波、红外线", "手法：麦肯基(McKenzie)伸展练习、关节松动、推拿(中央型突出禁用重手法)", "运动疗法：核心肌群训练(桥式、平板支撑)、Williams屈曲体操、游泳", "药物：NSAIDs、神经营养药、肌肉松弛剂", "手术：保守3个月无效、马尾综合征、肌力进行性下降需手术"], "complications": ["马尾综合征：大小便障碍、鞍区麻木，急诊手术", "神经根粘连：术后早期直腿抬高训练", "腰背肌萎缩：核心训练"], "notes": ["牵引禁忌：孕妇、严重高血压心脏病、骨质疏松、腰椎滑脱、肿瘤结核", "牵引时屈髋屈膝位，重量从小开始，症状加重立即停", "避免弯腰搬重物、久坐、腰部受凉", "倒走效果不明确，不推荐作为常规训练", "急性期后尽早活动，长期卧床反而加重"], "refs": [{"title": "腰椎间盘突出症诊治与康复管理指南", "author": "中华医学会", "url": "https://rs.yiigle.com/cmaid/1357107"}]}, "fracture": {"name": "骨折后康复", "overview": "骨折后康复分三期：早期(炎症期1-2周)、中期(骨痂形成期3-12周)、后期(愈合12周后)。目标恢复ROM、肌力、ADL。", "assessment": ["骨折愈合：X线骨痂形成、临床愈合标准", "ROM：各关节主动/被动活动度", "肌力：MMT、等速肌力", "肿胀、疼痛VAS", "ADL、步态分析"], "treatment": ["早期(术后0-2周)：抬高患肢消肿、伤肢肌肉等长收缩(股四头肌等长)、未固定关节主动活动、CPM持续被动活动", "中期(3-12周)：渐进ROM训练(主动→助力→抗阻)、关节松动术、肌力从等长过渡到等张抗阻、水中运动", "后期(12周后)：全范围ROM、渐进抗阻训练、有氧训练、ADL与工作模拟、动态/静态支具矫正僵硬", "物理因子：低强度脉冲超声(LIPUS)促进骨愈合、脉冲电磁场、经皮电刺激消肿止痛", "上肢骨折：肩肘腕手逐关节恢复，重点手功能", "下肢骨折：负重从部分负重→完全负重，步态训练"], "complications": ["肿胀/肌萎缩：抬高、等长收缩、电刺激", "关节僵硬/粘连：早期CPM、持续被动牵伸", "DVT：踝泵运动、弹力袜、气压泵、低分子肝素", "骨折延迟愈合/不愈合：LIPUS、PEMF、手术", "异位骨化：避免暴力被动牵拉"], "notes": ["早期禁忌：骨折部位主动活动、暴力被动牵拉、过早负重", "负重程度严格按骨折愈合情况由手术医生决定", "训练在无痛或微痛范围内，剧痛提示过度", "上肢术后抬高高于心脏，下肢术后抬高消肿", "定期复查X线调整康复方案"], "refs": [{"title": "骨科康复中国专家共识", "author": "中国康复医学会", "url": "https://rs.yiigle.com/cmaid/1020877"}]}, "koa": {"name": "膝骨关节炎(KOA)", "overview": "关节软骨退行性变+骨质增生，表现疼痛、僵硬、活动受限。肥胖是主要危险因素。", "assessment": ["疼痛：VAS、WOMAC骨关节炎指数", "ROM：膝关节屈伸活动度", "肌力：股四头肌MMT、等速肌力", "行走：6分钟步行、TUG", "影像学：Kellgren-Lawrence分级(0-Ⅳ级)"], "treatment": ["运动疗法(一线)：股四头肌等长收缩、直抬腿、静蹲(屈膝不小于90°)、抗阻训练，肌力提升需>30%才有效", "有氧运动：步行、功率自行车、水中运动(水疗减轻负重)", "本体感觉/平衡训练：平衡垫、单腿站立", "身心运动：太极、八段锦", "物理因子：超声波、脉冲电磁场、低能量激光、体外冲击波", "减重：BMI>25建议减重", "药物：NSAIDs外用/口服、关节腔玻璃酸钠注射", "手术：关节镜清理、单髁置换、全膝置换"], "complications": ["关节畸形(内翻)：矫形鞋垫、外侧楔形垫", "肌萎缩：股四头肌训练", "跌倒：平衡训练、环境改造"], "notes": ["避免长时间跑跳、深蹲、爬楼、爬山", "运动后疼痛加重应减量，不是越痛越练", "选择缓冲好的鞋，避免硬底鞋", "坚持长期规律运动比短期突击更有效", "急性炎症期红肿热痛时休息，缓解期才训练"], "refs": [{"title": "中国膝骨关节炎康复治疗指南(2023版)", "author": "中华医学会", "url": "https://www.ddzxhospital.com/library/up_f/file/20240809/202408091518084871.pdf"}]}, "copd": {"name": "慢性阻塞性肺疾病(COPD)", "overview": "持续气流受限，表现呼吸困难、咳嗽咳痰。肺康复是中重度COPD一线非药物治疗，至少8周才见效。", "assessment": ["肺功能：FEV1/FVC、FEV1%预计值", "呼吸困难：mMRC分级、Borg量表、CAT评分", "运动耐力：6分钟步行试验(6MWT)、心肺运动试验(VO2peak)", "生活质量：SGRQ圣乔治呼吸问卷", "营养、心理(焦虑抑郁)"], "treatment": ["呼吸训练：腹式呼吸(膈肌呼吸)、缩唇呼吸(鼻吸口呼4-6秒)", "排痰：体位引流、胸部叩击/震颤、有效咳嗽训练、超声雾化", "有氧运动：步行、踏车，强度RPE 12-14分、Borg呼吸困难3-4分，30-60min/次，3-5次/周", "抗阻训练：上肢+下肢，1RM的60-80%", "呼吸肌训练：吸气肌训练器(IMT)", "物理因子：超短波、超声雾化消炎排痰", "营养：高蛋白、控制高碳水化合物(减少CO2生成)", "中国传统：太极拳、八段锦"], "complications": ["急性呼吸困难：停止训练、缩唇呼吸、支气管扩张剂", "低氧血症：SpO2<90%时吸氧", "骨质疏松：日照、维生素D、负重运动", "焦虑抑郁：心理干预"], "notes": ["运动前用支气管扩张剂，餐后1-2小时运动", "避免寒冷、空气污染时户外锻炼", "随身携带急救吸入剂", "训练强度以稍出汗、轻度气促但能说话为度", "持之以恒至少8周，停训后效果会消退"], "refs": [{"title": "老年COPD全周期康复评估与治疗专家共识", "author": "中华医学会呼吸病学分会", "url": "https://guide.medlive.cn/guideline/32633"}]}, "chd": {"name": "冠心病/心梗后心脏康复", "overview": "心脏康复分三期：院内期、早期院外(出院后1-3月)、长期维持。运动处方是核心，降低死亡率和再入院率。", "assessment": ["心血管风险分层：低/中/高危，运动负荷试验( treadmill test)", "心功能：LVEF左室射血分数、NYHA心功能分级", "运动耐力：METs代谢当量、6分钟步行、心肺运动试验", "心绞痛CCS分级"], "treatment": ["Ⅰ期(住院期)：床上坐起、床边站立、室内步行，1-2METs，严密心电监护", "Ⅱ期(出院后1-6月)：门诊监护下运动，每周3次共36次", "有氧运动：步行、踏车、慢跑，靶心率=最大心率的60-75%或 reserved HR的50-70%", "抗阻训练：轻-中等强度，大肌群，避免Valsalva屏气", "柔韧/平衡训练", "药物：抗血小板、他汀、β受体阻滞剂", "生活方式：戒烟、饮食、血压血糖血脂管理、心理"], "complications": ["运动中心绞痛/心律失常：停训、含服硝酸甘油、心电监护", "再发心梗：绝对禁忌证时禁止运动", "抑郁/焦虑：心理干预"], "notes": ["绝对禁忌：不稳定心绞痛、未控制心衰、严重心律失常、安静BP>200/110", "运动前热身5-10min、整理活动5-10min", "避免寒冷、高温、饱餐后1小时内运动", "出现胸痛、头晕、气短、心悸立即停止", "服用双抗+抗凝药避免碰撞性运动"], "refs": [{"title": "冠心病患者运动治疗中国专家共识", "author": "中华医学会心血管病学分会", "url": "https://rs.yiigle.com/cmaid/631049"}, {"title": "心血管疾病患者门诊运动康复专家共识", "author": "中国康复医学会", "url": "https://rs.yiigle.com/cmaid/1587413"}]}, "dm": {"name": "糖尿病康复", "overview": "2型糖尿病运动治疗是基础疗法之一，可改善胰岛素敏感性、控制血糖、预防并发症。", "assessment": ["血糖：空腹/餐后血糖、HbA1c糖化血红蛋白", "运动耐力：6分钟步行、心肺运动试验", "并发症筛查：足部检查(10g单丝)、眼底、肾功能、神经传导", "BMI、腰围"], "treatment": ["有氧运动：步行、快走、游泳、 cycling，中等强度(心率=170-年龄)，30-60min/次，每周≥150min", "抗阻训练：大肌群，2-3次/周，与有氧交替", "柔韧性训练：运动前后拉伸", "中国传统：太极、八段锦", "饮食控制+药物(二甲双胍/胰岛素)", "糖尿病足管理：每日检查双足、合适鞋袜、足部护理"], "complications": ["低血糖：运动前血糖<5.6mmol/L应补充碳水，随身携带糖果/葡萄糖片", "糖尿病足溃疡：每日检查足部，穿合适鞋袜，有溃疡禁负重运动", "视网膜出血：增殖期视网膜病变避免高强度、屏气、倒立运动", "心血管事件：运动前筛查，避免突然高强度"], "notes": ["餐后1小时运动最佳，避免空腹运动", "胰岛素/促泌剂使用者运动前后监测血糖", "随身携带糖尿病急救卡和糖块", "穿合脚透气运动鞋，运动后检查双足有无破损", "避免在极端高温/寒冷环境运动"], "refs": [{"title": "中国糖尿病防治指南(2024版)", "author": "中华医学会糖尿病学分会", "url": "https://d.wanfangdata.com.cn/periodical/zgsynkzz202510012"}, {"title": "体医融合糖尿病运动干预专家共识", "author": "中国康复医学会", "url": "https://rs.yiigle.com/cmaid/1428470"}]}};
+
+const MUSCLES = [{"region": "上肢", "group": "肩带肌", "name": "三角肌", "origin": "锁骨外侧1/3、肩峰、肩胛冈", "insertion": "肱骨三角肌粗隆", "action": "外展肩；前束屈/内旋，后束伸/外旋", "nerve": "腋神经(C5-6)", "mmt": "坐位上肢外展90°向下抗阻"}, {"region": "上肢", "group": "肩带肌", "name": "冈上肌", "origin": "肩胛骨冈上窝", "insertion": "肱骨大结节上部", "action": "肩外展启动(0-15°)", "nerve": "肩胛上神经(C5)", "mmt": "上肢下垂位外展抗阻"}, {"region": "上肢", "group": "肩带肌", "name": "冈下肌", "origin": "肩胛骨冈下窝", "insertion": "肱骨大结节中部", "action": "肩外旋", "nerve": "肩胛上神经(C5-6)", "mmt": "屈肘90°前臂外旋抗阻"}, {"region": "上肢", "group": "肩带肌", "name": "小圆肌", "origin": "肩胛骨外侧缘上2/3", "insertion": "肱骨大结节下部", "action": "肩外旋、内收", "nerve": "腋神经(C5)", "mmt": "同冈下肌"}, {"region": "上肢", "group": "肩带肌", "name": "肩胛下肌", "origin": "肩胛下窝", "insertion": "肱骨小结节", "action": "肩内旋", "nerve": "肩胛下神经(C5-7)", "mmt": "屈肘90°前臂内旋抗阻"}, {"region": "上肢", "group": "上臂肌", "name": "肱二头肌", "origin": "长头盂上结节/短头喙突", "insertion": "桡骨粗隆、前臂筋膜", "action": "屈肘、前臂旋后、弱屈肩", "nerve": "肌皮神经(C5-6)", "mmt": "屈肘90°旋后位屈肘抗阻"}, {"region": "上肢", "group": "上臂肌", "name": "肱肌", "origin": "肱骨前面下半", "insertion": "尺骨粗隆", "action": "屈肘(最重要)", "nerve": "肌皮神经(C5-7)", "mmt": "前臂旋前位屈肘抗阻"}, {"region": "上肢", "group": "上臂肌", "name": "肱三头肌", "origin": "长头盂下结节/内外侧头肱骨背面", "insertion": "尺骨鹰嘴", "action": "伸肘；长头助伸肩", "nerve": "桡神经(C6-8)", "mmt": "肩外展位伸肘抗阻"}, {"region": "上肢", "group": "前臂肌", "name": "肱桡肌", "origin": "肱骨外上髁嵴", "insertion": "桡骨茎突", "action": "屈肘(中立位最强)", "nerve": "桡神经(C5-6)", "mmt": "前臂中立位屈肘抗阻"}, {"region": "上肢", "group": "前臂肌", "name": "旋前圆肌", "origin": "肱骨内上髁", "insertion": "桡骨外侧面中部", "action": "前臂旋前、屈肘", "nerve": "正中神经(C6-7)", "mmt": "屈肘位前臂旋前抗阻"}, {"region": "上肢", "group": "前臂肌", "name": "桡侧腕屈肌", "origin": "肱骨内上髁", "insertion": "第2掌骨底", "action": "屈腕、桡偏", "nerve": "正中神经(C6-7)", "mmt": "屈腕桡偏抗阻"}, {"region": "上肢", "group": "前臂肌", "name": "尺侧腕屈肌", "origin": "肱骨内上髁+尺骨鹰嘴", "insertion": "豌豆骨、掌骨", "action": "屈腕、尺偏", "nerve": "尺神经(C7-T1)", "mmt": "屈腕尺偏抗阻"}, {"region": "上肢", "group": "前臂肌", "name": "指浅屈肌", "origin": "肱骨内上髁+尺桡骨", "insertion": "第2-5指中节底两侧", "action": "屈近侧指间关节、屈腕", "nerve": "正中神经(C7-T1)", "mmt": "固定其他指屈中指抗阻"}, {"region": "上肢", "group": "前臂肌", "name": "指深屈肌", "origin": "尺骨前面+骨间膜", "insertion": "第2-5指远节底", "action": "屈远侧指间关节", "nerve": "正中(示中指)+尺(环小指)(C8-T1)", "mmt": "固定中节屈远节抗阻"}, {"region": "上肢", "group": "前臂肌", "name": "拇长屈肌", "origin": "桡骨前面+骨间膜", "insertion": "拇指远节底", "action": "屈拇指指间关节", "nerve": "正中神经(C8-T1)", "mmt": "固定掌指关节屈末节抗阻"}, {"region": "上肢", "group": "前臂肌", "name": "桡侧腕长/短伸肌", "origin": "肱骨外上髁嵴/外上髁", "insertion": "第2/3掌骨底", "action": "伸腕、桡偏", "nerve": "桡神经(C6-7)", "mmt": "伸腕桡偏抗阻"}, {"region": "上肢", "group": "前臂肌", "name": "尺侧腕伸肌", "origin": "肱骨外上髁", "insertion": "第5掌骨底", "action": "伸腕、尺偏", "nerve": "桡神经(C7-8)", "mmt": "伸腕尺偏抗阻"}, {"region": "上肢", "group": "前臂肌", "name": "指伸肌", "origin": "肱骨外上髁", "insertion": "第2-5指背侧伸肌装置", "action": "伸指、伸腕", "nerve": "桡神经(C7-8)", "mmt": "近端固定伸指抗阻"}, {"region": "上肢", "group": "前臂肌", "name": "旋后肌", "origin": "肱骨外上髁+尺骨外侧", "insertion": "桡骨前面上1/3", "action": "前臂旋后", "nerve": "桡神经(C5-7)", "mmt": "伸肘位前臂旋后抗阻"}, {"region": "上肢", "group": "手肌", "name": "拇短展肌", "origin": "舟骨、大多角骨", "insertion": "拇指近节底桡侧", "action": "拇外展", "nerve": "正中神经(C8-T1)", "mmt": "掌面外展拇指抗阻"}, {"region": "上肢", "group": "手肌", "name": "拇对掌肌", "origin": "大多角骨", "insertion": "第1掌骨桡侧缘", "action": "拇指对掌(对小指)", "nerve": "正中神经(C8-T1)", "mmt": "拇指尖触小指根部对抗"}, {"region": "上肢", "group": "手肌", "name": "拇收肌", "origin": "头状骨、第2-3掌骨底", "insertion": "拇指近节尺侧", "action": "拇内收", "nerve": "尺神经(C8-T1)", "mmt": "夹纸试验(Fromant征)"}, {"region": "上肢", "group": "手肌", "name": "骨间肌", "origin": "掌骨", "insertion": "第2-5指近节+伸肌装置", "action": "掌侧内收/背侧外展", "nerve": "尺神经(C8-T1)", "mmt": "手指分开/并拢抗阻"}, {"region": "上肢", "group": "手肌", "name": "蚓状肌", "origin": "指深屈肌腱", "insertion": "伸肌装置外侧束", "action": "屈掌指关节、伸指间关节", "nerve": "正中(1-2)+尺(3-4)(C8-T1)", "mmt": "MP屈PIP伸抗阻"}, {"region": "下肢", "group": "髋肌", "name": "髂腰肌", "origin": "髂窝+腰椎体侧面", "insertion": "股骨小转子", "action": "屈髋、髋旋外；下肢固定时屈躯干", "nerve": "腰丛神经(L1-3)", "mmt": "坐位屈膝屈髋抗阻"}, {"region": "下肢", "group": "髋肌", "name": "臀大肌", "origin": "髂骨翼外面+骶骨背面", "insertion": "髂胫束+股骨臀肌粗隆", "action": "伸髋、髋外旋；躯干后伸", "nerve": "臀下神经(L5-S2)", "mmt": "俯卧位伸髋抗阻"}, {"region": "下肢", "group": "髋肌", "name": "臀中肌", "origin": "髂骨翼外面", "insertion": "股骨大转子", "action": "髋外展；稳定骨盆(Trendelenburg)", "nerve": "臀上神经(L4-S1)", "mmt": "侧卧位下肢外展抗阻"}, {"region": "下肢", "group": "髋肌", "name": "梨状肌", "origin": "骶骨前面", "insertion": "股骨大转子", "action": "髋外展、外旋", "nerve": "骶丛(S1-2)", "mmt": "俯卧位髋外旋抗阻"}, {"region": "下肢", "group": "大腿肌", "name": "缝匠肌", "origin": "髂前上棘", "insertion": "胫骨上端内侧面(鹅足)", "action": "屈髋屈膝、髋外旋外展(盘腿)", "nerve": "股神经(L2-3)", "mmt": "坐位下肢外旋屈髋屈膝抗阻"}, {"region": "下肢", "group": "大腿肌", "name": "股四头肌", "origin": "股直肌髂前下棘/其余股骨", "insertion": "胫骨粗隆(经髌韧带)", "action": "伸膝；股直肌助屈髋", "nerve": "股神经(L2-4)", "mmt": "坐位小腿下垂伸膝抗阻"}, {"region": "下肢", "group": "大腿肌", "name": "长/短/大收肌", "origin": "耻骨下支/坐骨结节", "insertion": "股骨粗线/内上髁", "action": "髋内收", "nerve": "闭孔神经(L2-4)", "mmt": "侧卧位下肢内收抗阻"}, {"region": "下肢", "group": "大腿肌", "name": "股二头肌", "origin": "长头坐骨结节/短头股骨粗线", "insertion": "腓骨头", "action": "屈膝、髋伸；屈膝时小腿外旋", "nerve": "胫神经(长头)+腓总神经(短头)(L5-S2)", "mmt": "俯卧位屈膝抗阻"}, {"region": "下肢", "group": "大腿肌", "name": "半腱肌/半膜肌", "origin": "坐骨结节", "insertion": "胫骨上端内侧(鹅足)", "action": "屈膝、髋伸；屈膝时小腿内旋", "nerve": "胫神经(L5-S2)", "mmt": "俯卧位屈膝内旋抗阻"}, {"region": "下肢", "group": "小腿肌", "name": "胫骨前肌", "origin": "胫骨外侧面上2/3", "insertion": "内侧楔骨+第1跖骨底", "action": "踝背屈、足内翻(足下垂责任肌)", "nerve": "腓深神经(L4-5)", "mmt": "坐位踝背屈内翻抗阻"}, {"region": "下肢", "group": "小腿肌", "name": "拇长伸肌", "origin": "腓骨内侧面中1/3", "insertion": "拇趾远节底", "action": "伸拇趾、踝背屈", "nerve": "腓深神经(L5)", "mmt": "伸拇趾抗阻"}, {"region": "下肢", "group": "小腿肌", "name": "腓骨长/短肌", "origin": "腓骨外侧面", "insertion": "长肌内侧楔骨第1跖骨/短肌第5跖骨底", "action": "足外翻、踝跖屈；维持足弓", "nerve": "腓浅神经(L5-S1)", "mmt": "坐位足外翻抗阻"}, {"region": "下肢", "group": "小腿肌", "name": "腓肠肌", "origin": "股骨内外侧髁", "insertion": "跟骨(经跟腱)", "action": "踝跖屈；助屈膝", "nerve": "胫神经(S1-2)", "mmt": "俯卧位膝伸直踝跖屈抗阻"}, {"region": "下肢", "group": "小腿肌", "name": "比目鱼肌", "origin": "胫腓骨上端后面", "insertion": "跟骨(经跟腱)", "action": "站立位踝跖屈", "nerve": "胫神经(S1-2)", "mmt": "坐位屈膝90°踝跖屈抗阻"}, {"region": "下肢", "group": "小腿肌", "name": "胫骨后肌", "origin": "胫腓骨后面+骨间膜", "insertion": "舟骨粗隆+楔骨", "action": "足内翻、踝跖屈；维持足弓", "nerve": "胫神经(L4-5)", "mmt": "足内翻跖屈抗阻"}, {"region": "下肢", "group": "小腿肌", "name": "拇长屈肌", "origin": "腓骨后面下2/3", "insertion": "拇趾远节底", "action": "屈拇趾、踝跖屈", "nerve": "胫神经(S2-3)", "mmt": "屈拇趾抗阻"}, {"region": "躯干", "group": "颈肌", "name": "胸锁乳突肌", "origin": "胸骨柄+锁骨内侧1/3", "insertion": "颞骨乳突", "action": "单侧：头同侧屈对侧旋；双侧：屈颈", "nerve": "副神经(XI)+颈丛(C2-3)", "mmt": "仰卧位抬头屈颈抗阻"}, {"region": "躯干", "group": "颈肌", "name": "斜方肌", "origin": "上项线+枕外隆突+C7-T12棘突", "insertion": "锁骨外侧1/3+肩峰+肩胛冈", "action": "上束提肩胛/中束内收/下束降肩胛", "nerve": "副神经(XI)", "mmt": "坐位耸肩抗阻"}, {"region": "躯干", "group": "颈肌", "name": "肩胛提肌", "origin": "C1-4横突", "insertion": "肩胛骨上角", "action": "上提肩胛", "nerve": "肩胛背神经(C4-5)", "mmt": "耸肩抗阻"}, {"region": "躯干", "group": "背肌", "name": "背阔肌", "origin": "下6胸椎+腰椎棘突+髂嵴", "insertion": "肱骨小结节嵴", "action": "肩内收内旋后伸；引体向上主力", "nerve": "胸背神经(C6-8)", "mmt": "坐位肩后伸内收抗阻"}, {"region": "躯干", "group": "背肌", "name": "菱形肌", "origin": "C7-T5棘突", "insertion": "肩胛骨内侧缘", "action": "肩胛骨后缩(内收)", "nerve": "肩胛背神经(C4-5)", "mmt": "坐位肩胛后缩抗阻"}, {"region": "躯干", "group": "背肌", "name": "竖脊肌(骶棘肌)", "origin": "骶骨背面+髂嵴", "insertion": "椎骨/肋骨+颞骨乳突", "action": "脊柱后伸、侧屈；维持直立", "nerve": "脊神经后支(C1-S5)", "mmt": "俯卧位上半身抬离床面抗阻"}, {"region": "躯干", "group": "胸腹肌", "name": "胸大肌", "origin": "锁骨内侧半+胸骨+第1-6肋软骨", "insertion": "肱骨大结节嵴", "action": "肩内收内旋前屈", "nerve": "胸内外侧神经(C5-T1)", "mmt": "坐位双手胸前合掌对抗"}, {"region": "躯干", "group": "胸腹肌", "name": "前锯肌", "origin": "第1-8肋骨外面", "insertion": "肩胛骨内侧缘前面", "action": "肩胛骨前伸(推墙)；助上肢上举", "nerve": "胸长神经(C5-7)", "mmt": "面对墙俯卧撑位肩胛前伸抗阻"}, {"region": "躯干", "group": "胸腹肌", "name": "腹直肌", "origin": "耻骨联合", "insertion": "剑突+第5-7肋软骨", "action": "躯干前屈；增加腹压", "nerve": "肋间神经(T7-12)", "mmt": "仰卧位抬头肩离床抗阻"}, {"region": "躯干", "group": "胸腹肌", "name": "腹外/内斜肌", "origin": "下8肋/胸腰筋膜", "insertion": "白线+髂嵴", "action": "躯干前屈、侧屈、旋转", "nerve": "肋间神经(T7-L1)", "mmt": "仰卧转体起坐抗阻"}, {"region": "躯干", "group": "胸腹肌", "name": "腰方肌", "origin": "髂嵴", "insertion": "第12肋+L1-4横突", "action": "脊柱侧屈；稳定骨盆", "nerve": "腰丛(T12-L3)", "mmt": "侧卧位上身抬起抗阻"}];
+
+const NEURO = {"cranial": {"name": "十二对脑神经检查", "items": [{"n": "Ⅰ 嗅神经", "test": "闻香精/醋/牙膏分别测两侧嗅觉", "abnormal": "嗅觉减退/丧失：颅前窝骨折、鼻炎"}, {"n": "Ⅱ 视神经", "test": "视力、视野粗测、眼底检查", "abnormal": "视野缺损：视通路病变；视乳头水肿：颅内压增高"}, {"n": "Ⅲ 动眼神经", "test": "上睑下垂、眼球各方向运动、瞳孔对光反射", "abnormal": "上睑下垂+外斜视+瞳孔散大：动眼神经麻痹"}, {"n": "Ⅳ 滑车神经", "test": "眼球向下外方运动", "abnormal": "下楼梯复视"}, {"n": "Ⅴ 三叉神经", "test": "面部感觉(痛/触/温)、咀嚼肌肌力、角膜反射", "abnormal": "面部麻木+咀嚼无力：三叉神经损害"}, {"n": "Ⅵ 外展神经", "test": "眼球外展运动", "abnormal": "眼球内斜视、外展不能：外直肌麻痹"}, {"n": "Ⅶ 面神经", "test": "抬眉、闭眼、鼓腮、露齿、吹口哨；舌前2/3味觉", "abnormal": "周围性面瘫：患侧全部面肌瘫痪(贝尔麻痹)；中枢性：对侧下面部瘫"}, {"n": "Ⅷ 位听神经", "test": "Rinne/Weber试验、Romberg、眼震", "abnormal": "感音性耳聋+眩晕+眼震：梅尼埃/听神经瘤"}, {"n": "Ⅸ 舌咽神经", "test": "咽反射、软腭上举、舌后1/3味觉", "abnormal": "吞咽困难、咽反射消失"}, {"n": "Ⅹ 迷走神经", "test": "发音、吞咽、软腭位置", "abnormal": "声音嘶哑、饮水呛咳、腭垂偏向健侧"}, {"n": "Ⅺ 副神经", "test": "耸肩、转头对抗阻力", "abnormal": "患侧耸肩无力、转颈无力"}, {"n": "Ⅻ 舌下神经", "test": "伸舌偏斜、舌肌萎缩、肌束颤动", "abnormal": "周围性：伸舌偏向患侧+舌肌萎缩；中枢性：伸舌偏向对侧无萎缩"}]}, "peripheral": {"name": "上肢周围神经损伤定位", "items": [{"nerve": "肌皮神经(C5-7)", "muscle": "肱二头肌、肱肌、喙肱肌", "sign": "屈肘无力，前臂旋后力弱；前臂外侧感觉障碍", "test": "坐位屈肘抗阻测肌力"}, {"nerve": "腋神经(C5-6)", "muscle": "三角肌、小圆肌", "sign": "方肩畸形、肩外展不能(30°-90°)；肩部外侧披肩区感觉障碍", "test": "肩外展90°抗阻"}, {"nerve": "桡神经(C5-T1)", "muscle": "肱三头肌、肱桡肌、腕伸肌、指伸肌、拇长伸肌", "sign": "垂腕畸形！腕背伸不能、拇指背伸不能；手背桡侧虎口区感觉障碍", "test": "伸腕抗阻；抬腕试验"}, {"nerve": "正中神经(C6-T1)", "muscle": "桡侧腕屈肌、指浅屈肌、拇长屈肌、大鱼际肌(拇对掌/拇短展)", "sign": "猿手畸形！拇指对掌不能、拇指不能对掌成O形；桡侧三指半感觉障碍", "test": "拇指对掌抗阻；捏握试验"}, {"nerve": "尺神经(C8-T1)", "muscle": "尺侧腕屈肌、指深屈肌(尺侧半)、骨间肌、小鱼际、拇收肌", "sign": "爪形手畸形(环小指)；夹纸试验阳性(Fromant征)；尺侧一指半感觉障碍", "test": "夹纸试验；手指分开并拢抗阻"}]}, "lower_neuro": {"name": "下肢周围神经损伤定位", "items": [{"nerve": "股神经(L2-4)", "muscle": "髂腰肌、股四头肌", "sign": "伸膝无力、膝反射消失；大腿前侧+小腿内侧感觉障碍", "test": "坐位伸膝抗阻"}, {"nerve": "闭孔神经(L2-4)", "muscle": "大腿内收肌群", "sign": "髋内收无力、大腿内侧感觉障碍", "test": "侧卧位下肢内收抗阻"}, {"nerve": "臀上神经(L4-S1)", "muscle": "臀中肌、臀小肌、阔筋膜张肌", "sign": "Trendelenburg征(鸭步)：站立健侧骨盆下沉", "test": "单腿站立试验"}, {"nerve": "臀下神经(L5-S2)", "muscle": "臀大肌", "sign": "伸髋无力、上楼困难；鹅步", "test": "俯卧位伸髋抗阻"}, {"nerve": "坐骨神经(L4-S3)", "muscle": "大腿后群+小腿+足全部肌肉", "sign": "膝关节屈曲以下全部瘫痪；直腿抬高试验阳性", "test": "Laseque征(仰卧直腿抬高<70°放射痛)"}, {"nerve": "腓总神经(L4-S2)", "muscle": "胫骨前肌、趾长伸肌、拇长伸肌、腓骨长短肌", "sign": "足下垂！跨阈步态；踝背屈外翻不能；小腿前外侧+足背感觉障碍", "test": "踝背屈抗阻；足外翻抗阻"}, {"nerve": "胫神经(L4-S3)", "muscle": "小腿后群(腓肠肌/比目鱼肌/胫后肌/屈趾肌)", "sign": "钩状足(仰趾足)；踝跖屈不能；足底感觉障碍", "test": "踝跖屈抗阻"}]}, "signs": {"name": "神经定位特殊体征", "items": [{"sign": "Babinski征", "test": "钝物划足底外侧自足跟至小趾根部", "positive": "拇趾背伸余趾扇形展开=锥体束损害(脑瘫/卒中)"}, {"sign": "Chaddock征", "test": "划足背外侧缘", "positive": "同Babinski"}, {"sign": "Oppenheim征", "test": "沿胫骨前缘用力下滑", "positive": "同Babinski"}, {"sign": "Gordon征", "test": "挤压腓肠肌", "positive": "同Babinski"}, {"sign": "Hoffmann征", "test": "弹拨中指指甲", "positive": "拇指内收=颈髓病变/锥体束征"}, {"sign": "掌颏反射", "test": "划手掌大鱼际", "positive": "颏肌收缩=假性球麻痹"}, {"sign": "腱反射亢进", "test": "肱二头肌(C5-6)、肱三头肌(C7-8)、膝反射(L2-4)、跟腱反射(S1-2)", "positive": "亢进=锥体束损害；消失=周围神经/脊髓休克"}, {"sign": "病理阵挛", "test": "髌阵挛/踝阵挛", "positive": "持续阵挛=锥体束损害"}, {"sign": "Laseque征(直腿抬高)", "test": "仰卧直腿抬高<70°出现下肢放射痛", "positive": "腰椎间盘突出症(L5/S1)"}, {"sign": "Bragard加强试验", "test": "直腿抬高到痛处再背屈踝关节", "positive": "疼痛加重=根性痛"}, {"sign": "压头试验(Spurling)", "test": "头后仰偏向患侧下压头顶", "positive": "上肢放射痛=神经根型颈椎病"}, {"sign": "臂丛牵拉试验", "test": "头偏向健侧牵拉患侧上肢", "positive": "上肢放射痛=颈椎病"}, {"sign": "Tinel征", "test": "叩击神经损伤处", "positive": "远端出现放射痛=神经再生"}, {"sign": "Phalen试验", "test": "屈腕90°保持1分钟", "positive": "桡侧三指麻=腕管综合征"}, {"sign": "Fromant征", "test": "拇指示指夹纸", "positive": "拇指远节屈曲=尺神经损伤"}, {"sign": "Trendelenburg征", "test": "单腿站立", "positive": "对侧骨盆下沉=臀中肌麻痹"}, {"sign": "Romberg征", "test": "闭目站立", "positive": "摇晃不稳=后索损害(脊髓痨)或小脑病变"}, {"sign": "Glasgow昏迷评分(GCS)", "test": "睁眼E(1-4)+言语V(1-5)+运动M(1-6)", "positive": "总分3-15，≤8分昏迷"}]}, "reflexes": {"name": "生理反射节段定位", "items": [{"reflex": "肱二头肌反射", "root": "C5-6", "method": "叩击肱二头肌腱", "normal": "肘关节屈曲"}, {"reflex": "肱三头肌反射", "root": "C7-8", "method": "叩击肱三头肌腱", "normal": "肘关节伸展"}, {"reflex": "桡骨膜反射", "root": "C5-7", "method": "叩击桡骨茎突", "normal": "肘屈+前臂旋前"}, {"reflex": "膝反射", "root": "L2-4", "method": "坐位/卧位叩击髌腱", "normal": "小腿前踢"}, {"reflex": "跟腱反射", "root": "S1-2", "method": "跪位叩击跟腱", "normal": "足跖屈"}, {"reflex": "腹壁反射", "root": "T7-12", "method": "划腹壁皮肤", "normal": "腹壁收缩"}, {"reflex": "提睾反射", "root": "L1-2", "method": "划大腿内侧", "normal": "睾丸上提"}, {"reflex": "肛门反射", "root": "S4-5", "method": "划肛周皮肤", "normal": "肛门收缩"}]}};
+
+const SCALES = {"balance": {"name": "平衡与步态评定", "items": [{"name": "Berg平衡量表(BBS)", "file": "", "desc": "14项，每项0-4分，满分56分。0-20=坐轮椅，21-40=需辅助步行，41-56=独立步行。<40分跌倒风险高。"}, {"name": "TUG计时起立行走", "file": "", "desc": "记时从椅子站起走3米转身走回坐下。<10s正常，>20s移动依赖，>30s跌倒高风险。"}, {"name": "Carr平衡功能评定", "file": "Carr平衡功能评定法.docx", "desc": "Carr-Shepherd平衡评定，分坐位/站位/动态平衡。"}, {"name": "上田氏平衡反应试验", "file": "上田氏平衡反应试验.docx", "desc": "日本上田敏法，分级0-V判断平衡反应。"}, {"name": "Romberg征", "file": "", "desc": "闭目直立，摇晃=后索损害(脊髓痨)或小脑病变。"}, {"name": "Tinnetti量表(POMA)", "file": "", "desc": "平衡9项+步态7项，满分28。<19=跌倒高危。"}]}, "motor": {"name": "运动功能评定", "items": [{"name": "Brunnstrom六期分期", "file": "", "desc": "偏瘫恢复6期：弛缓→痉挛开始→共同运动达峰→分离运动→分离加强→近正常。"}, {"name": "Fugl-Meyer评定(FMA)", "file": "Fugl-Meyer评定法.docx", "desc": "上肢66分+下肢34分=总分100。<50=严重运动障碍，85-95=轻度。"}, {"name": "MMT徒手肌力检查", "file": "MMT.docx", "desc": "0级无收缩→5级正常抗阻。3级=能抗重力不能抗阻。"}, {"name": "Ashworth痉挛量表", "file": "", "desc": "0无肌张力增高→4僵直。1+轻度增加，2明显，3重，4僵直。"}, {"name": "改良Ashworth(MAS)", "file": "", "desc": "康复临床最常用痉挛评定。"}, {"name": "ROM关节活动度", "file": "ROM.docx", "desc": "用量角器测各关节主动/被动活动范围。"}]}, "adl": {"name": "日常生活能力(ADL)", "items": [{"name": "Barthel指数(BI)", "file": "Barthel指数.docx", "desc": "10项，满分100。>60=生活基本自理，40-60=需帮助，<40=完全依赖。"}, {"name": "改良Barthel指数(MBI)", "file": "BI-100(改良).docx", "desc": "更细化评分。"}, {"name": "FIM功能独立性", "file": "FIM评估.docx", "desc": "18项运动+认知，满分126。<72=重度依赖。"}, {"name": "WeeFIM(儿童)", "file": "WeeFIM.docx", "desc": "儿童FIM，18项适合0-7岁。"}, {"name": "Katz指数", "file": "", "desc": "6项ADL独立分级A-G。"}]}, "pain": {"name": "疼痛与关节评定", "items": [{"name": "VAS视觉模拟评分", "file": "", "desc": "0-10分，0无痛10最痛。>3分需镇痛。"}, {"name": "McGill疼痛问卷", "file": "", "desc": "体感/情感/评价多维度。"}, {"name": "HSS膝关节评分", "file": "膝关节功能评价记录表.docx", "desc": "膝关节置换术后评分，满分100。"}, {"name": "Harris髋关节评分", "file": "髋关节功能评定.docx", "desc": "髋关节置换术后，满分100。"}]}, "neuro": {"name": "神经与认知评定", "items": [{"name": "NIHSS卒中量表", "file": "", "desc": "15项，0-42分。<4轻微，>15严重卒中。"}, {"name": "GCS昏迷评分", "file": "", "desc": "睁眼E+言语V+运动M=3-15。≤8昏迷。"}, {"name": "MMSE简明精神状态", "file": "", "desc": "定向/记忆/注意/计算/回忆/语言。≤26认知障碍。"}, {"name": "MoCA蒙特利尔认知", "file": "", "desc": "对轻度认知障碍更敏感，<26分异常。"}, {"name": "洼田饮水试验", "file": "", "desc": "坐位饮30ml水，Ⅰ级正常，Ⅴ级呛咳误吸。"}, {"name": "Gesell发育量表", "file": "Gesell图形试验.docx", "desc": "儿童发育商DQ。"}]}};
+
+const TOPICS = [{"id": "pnf", "name": "PNF 促通技术", "dir": "PNF本体感觉神经肌肉促进技术", "en": "Proprioceptive Neuromuscular Facilitation", "desc": "螺旋对角模式+15种手法促进神经肌肉反应。"}, {"id": "ot", "name": "作业治疗 OT", "dir": "作业治疗", "en": "Occupational Therapy", "desc": "以有目的作业活动恢复ADL、工作与社会参与。"}, {"id": "rihen", "name": "川平法 RFE", "dir": "川平法课程", "en": "反复促通疗法", "desc": "反复引导促通瘫痪侧上肢与手功能。"}, {"id": "books", "name": "康复专著与体能", "dir": "康复的书", "en": "Reference Books & Conditioning", "desc": "中国康复医学、NSCA体能、运动损伤康复。"}];
+
+/* ===== 渲染左侧导航 ===== */
+const nav = document.getElementById('nav');
+
+/* ===== 分组标题工具 ===== */
+function addNavHeader(text, color){
+  const h = document.createElement('div');
+  h.style.cssText = `padding:16px 16px 4px;font-size:13px;font-weight:600;color:${color||'#64748b'};border-bottom:2px solid ${color||'#e2e8f0'};margin:4px 8px`;
+  h.textContent = text;
+  nav.appendChild(h);
+}
+
+/* ===== 分组: 基础与评定 ===== */
+addNavHeader('一、基础与评定', '#2563eb');
+
+/* ===== 1. 解剖与肌肉（置顶） ===== */
+const muscleGrp = document.createElement('div');
+muscleGrp.className = 'nav-group open';
+muscleGrp.innerHTML = `
+  <div class="nav-top" onclick="this.parentElement.classList.toggle('open')">
+    <span>🦴 解剖与肌肉</span><span class="cnt">${MUSCLES.length}</span>
+  </div>
+  <div class="nav-items">
+    <div class="nav-sub" onclick="renderMuscle('')">全部肌肉（51块）</div>
+  </div>`;
+nav.appendChild(muscleGrp);
+
+/* ===== 2. 神经评定 ===== */
+const neuroGrp = document.createElement('div');
+neuroGrp.className = 'nav-group open';
+neuroGrp.innerHTML = `
+  <div class="nav-top" onclick="this.parentElement.classList.toggle('open')">
+    <span>🧠 神经评定定位</span><span class="cnt">45+</span>
+  </div>
+  <div class="nav-items">
+    <div class="nav-sub" onclick="renderNeuro()">脑神经/周围神经/特殊体征</div>
+  </div>`;
+nav.appendChild(neuroGrp);
+
+/* ===== 评定量表 ===== */
+const scalesGrp = document.createElement('div');
+scalesGrp.className = 'nav-group open';
+scalesGrp.innerHTML = `
+  <div class="nav-top" onclick="this.parentElement.classList.toggle('open')">
+    <span>📏 康复评定量表</span><span class="cnt">27</span>
+  </div>
+  <div class="nav-items">
+    <div class="nav-sub" onclick="renderScales()">常用量表速查</div>
+  </div>`;
+nav.appendChild(scalesGrp);
+
+/* ===== 疾病康复 ===== */
+addNavHeader('二、疾病康复', '#dc2626');
+const disGrp = document.createElement('div');
+disGrp.className = 'nav-group open';
+let disSub = '';
+Object.keys(DISEASES).forEach(k=>{
+  disSub += `<div class="nav-sub" data-view="disease" data-disease="${k}">${DISEASES[k].name}</div>`;
+});
+disGrp.innerHTML = `
+  <div class="nav-top">
+    <span>📋 疾病康复（${Object.keys(DISEASES).length}种）</span>
+  </div>
+  <div class="nav-items">${disSub}</div>`;
+nav.appendChild(disGrp);
+
+/* ===== 4. 治疗技术/主题库 ===== */
+addNavHeader('三、治疗技术', '#059669');
+TOPICS.forEach((t, idx)=>{
+  const files = FILES[t.dir] || {doc:[],video:[],image:[]};
+  const docs = (DOCS[t.dir]) || [];
+  const fileCount = files.doc.length + files.image.length;
+
+  const grp = document.createElement('div');
+  grp.className = 'nav-group' + (idx===0?' open':'');
+  let sub = '';
+  sub += `<div class="nav-sub" data-view="kp" data-top="${t.id}">📘 知识点精讲<span class="badge">${Object.keys(KP_HTML).length?'1':''}</span></div>`;
+  grp.innerHTML = `
+    <div class="nav-top" onclick="this.parentElement.classList.toggle('open')">
+      <span>${t.name}</span><span class="cnt">${fileCount}</span>
+    </div>
+    <div class="nav-items">${sub}</div>`;
+  nav.appendChild(grp);
+});
+
+/* ===== 我的分享入口 ===== */
+addNavHeader('四、个人空间', '#7c3aed');
+const shareGrp = document.createElement('div');
+shareGrp.className = 'nav-group';
+shareGrp.innerHTML = `
+  <div class="nav-top" onclick="this.parentElement.classList.toggle('open')">
+    <span>📸 我的分享</span><span class="cnt">0</span>
+  </div>
+  <div class="nav-items">
+    <div class="nav-sub" data-view="share">上传图片/视频</div>
+  </div>`;
+nav.appendChild(shareGrp);
+
+/* ===== 启动封面 ===== */
+function enterApp(){
+  const s = document.getElementById('splash');
+  s.style.opacity = '0';
+  setTimeout(()=>{ s.style.display='none'; }, 600);
+}
+
+/* ===== 视图切换 ===== */
+function show(viewId){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+viewId).classList.add('active');
+  document.getElementById('main').scrollTop = 0;
+}
+function topicById(id){ return TOPICS.find(t=>t.id===id); }
+
+/* ===== 首页 ===== */
+function renderHome(){
+  const v = document.getElementById('view-home');
+  v.innerHTML = `
+  <div style="min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;animation:fadeUp .6s ease">
+    <div style="font-size:64px;margin-bottom:16px;animation:bounce 2s infinite">🦴</div>
+    <h1 style="font-size:36px;font-weight:800;background:linear-gradient(135deg,#1e40af,#0891b2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0">康复治疗学知识库</h1>
+    <p style="margin-top:12px;color:#64748b;font-size:15px">左侧选择开始 →</p>
+  </div>
+  <style>
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  </style>`;
+}
+
+/* ===== 知识点精讲视图 ===== */
+function renderKP(topicId){
+  const t = topicById(topicId);
+  const v = document.getElementById('view-kp');
+  v.innerHTML = `<div class="topic-title">${t.name}<span class="en">${t.en}</span></div>` + (KP_HTML[topicId]||'<p>暂无</p>');
+  show('kp');
+}
+
+/* ===== 文档列表视图（某主题下所有可阅读文档） ===== */
+/* ===== 删除列表（持久化） ===== */
+const DEL_KEY = 'deleted_items';
+function getDeleted(){ try{ return JSON.parse(localStorage.getItem(DEL_KEY)||'[]'); }catch(e){ return []; } }
+function isDeleted(rel){ return getDeleted().includes(rel); }
+function delItem(rel){
+  if(!confirm('从页面里删除这个条目？（只删页面显示，不删电脑上的文件）')) return;
+  const arr = getDeleted();
+  if(!arr.includes(rel)) arr.push(rel);
+  localStorage.setItem(DEL_KEY, JSON.stringify(arr));
+  renderHome();
+}
+
+function renderDocsList(topicId){
+  const t = topicById(topicId);
+  const all = DOCS[t.dir] || [];
+  const docs = all.filter(d=>!isDeleted(d.rel));
+  const v = document.getElementById('view-doc');
+  let html = `<div class="topic-title">${t.name} · 评定量表（${docs.length}个，点击直接打开）</div>
+  <div style="background:#f0f9ff;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#0369a1">📎 以下量表点击后直接用Word/PDF打开原文件，不在网页内显示正文</div>`;
+  docs.forEach((d)=>{
+    const url = 'file:///D:/康复/KF/' + encodeURI(t.dir) + '/' + encodeURI(d.rel.substring(t.dir.length+1));
+    html += `<div style="background:#fff;padding:12px 16px;border-radius:8px;margin-bottom:8px;border:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center">
+      <a href="${url}" style="color:#1e40af;text-decoration:none;font-size:14px;font-weight:500">📄 ${d.name}</a>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a href="${url}" style="background:#2563eb;color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:12px">打开</a>
+        <button onclick="delItem('${d.rel.replace(/'/g,"\\'")}')" style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer">删除</button>
+      </div>
+    </div>`;
+  });
+  v.innerHTML = html;
+  show('doc');
+}
+
+/* ===== 单文档阅读视图 ===== */
+function openDoc(topicId, idx){
+  const t = topicById(topicId);
+  if(!t){ // 用dir名直接找
+    const list = DOCS[topicId];
+    if(!list || !list[idx]) return alert('文献不存在或已删除');
+    const d = list[idx];
+    const v = document.getElementById('view-doc');
+    // 把正文按段落分块，美化
+    const paras = d.text.split(/\n+/).map(p=>p.trim()).filter(p=>p.length>0);
+    const bodyHtml = paras.map(p=>{
+      if(p.startsWith('【')||p.startsWith('摘要')||p.startsWith('前言')||p.startsWith('目的')||p.startsWith('方法')||p.startsWith('结果')||p.startsWith('结论')){
+        return `<p style="font-weight:600;color:#1e40af;margin:18px 0 8px;font-size:15px">${p}</p>`;
+      }
+      return `<p style="margin:0 0 12px;text-indent:2em;line-height:1.9;font-size:14.5px;color:#1f2937">${p}</p>`;
+    }).join('');
+    v.innerHTML = `
+      <div style="max-width:820px;margin:0 auto;padding:24px">
+        <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:24px 28px;border-radius:12px;margin-bottom:20px">
+          <div style="font-size:12px;opacity:0.8;cursor:pointer;margin-bottom:8px" onclick="history.back()">← 返回上一页</div>
+          <h2 style="margin:0;font-size:20px;line-height:1.4">📄 ${d.name}</h2>
+          <div style="font-size:12px;margin-top:10px;opacity:0.85">${d.ext.toUpperCase()} · ${Math.round(d.chars/1000)}千字 · 西医文献</div>
+        </div>
+        <div style="background:#fff;padding:28px 32px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);line-height:1.8">${bodyHtml}</div>
+      </div>
+    `;
+    show('doc');
+    document.getElementById('main').scrollTop = 0;
+    return;
+  }
+  const d = DOCS[t.dir][idx];
+  const v = document.getElementById('view-doc');
+  const url = 'file:///D:/康复/KF/' + encodeURI(t.dir) + '/' + encodeURI(d.rel.substring(t.dir.length+1));
+  const paras = d.text.split(/\n+/).map(p=>p.trim()).filter(p=>p.length>0);
+  const bodyHtml = paras.map(p=>{
+    if(p.startsWith('【')||p.startsWith('摘要')||p.startsWith('前言')||p.startsWith('目的')||p.startsWith('方法')||p.startsWith('结果')||p.startsWith('结论')){
+      return `<p style="font-weight:600;color:#1e40af;margin:18px 0 8px;font-size:15px">${p}</p>`;
+    }
+    return `<p style="margin:0 0 12px;text-indent:2em;line-height:1.9;font-size:14.5px;color:#1f2937">${p}</p>`;
+  }).join('');
+  v.innerHTML = `
+    <div style="max-width:820px;margin:0 auto;padding:24px">
+      <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:24px 28px;border-radius:12px;margin-bottom:20px">
+        <div style="font-size:12px;opacity:0.8;cursor:pointer;margin-bottom:8px" onclick="renderDocsList('${topicId}')">← 返回 ${t.name} 文献列表</div>
+        <h2 style="margin:0;font-size:20px;line-height:1.4">📄 ${d.name}</h2>
+        <div style="font-size:12px;margin-top:10px;opacity:0.85">${d.ext.toUpperCase()} · ${Math.round(d.chars/1000)}千字${d.pages? ' · '+d.pages+'页':''}${d.scanned?' · 扫描版':''}</div>
+      </div>
+      <div style="background:#fff;padding:28px 32px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);line-height:1.8">${bodyHtml}</div>
+    </div>
+  `;
+  show('doc');
+  document.getElementById('main').scrollTop = 0;
+}
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ===== 本地文件链接视图 ===== */
+function renderFiles(topicId){
+  const t = topicById(topicId);
+  const raw = FILES[t.dir] || {doc:[],video:[],image:[]};
+  const files = {
+    doc: (raw.doc||[]).filter(f=>!isDeleted(f.rel)),
+    image: (raw.image||[]).filter(f=>!isDeleted(f.rel)),
+  };
+  const v = document.getElementById('view-files');
+  let html = `<div class="topic-title">${t.name} · 原文件（文档与图片）</div>`;
+  const renderGroup = (title, arr, kind)=>{
+    if(!arr.length) return '';
+    let rows = arr.map(f=>{
+      const url = 'file:///D:/康复/KF/' + encodeURI(t.dir) + '/' + encodeURI(f.rel.substring(t.dir.length+1));
+      return `<div class="file-row" style="position:relative">
+        <span class="file-ico ${kind}">${kind==='doc'?'文':'图'}</span>
+        <a href="${url}" title="${f.name}">${f.name}</a>
+        <span class="sz">${f.sizeMB}MB</span>
+        <button onclick="delItem('${f.rel.replace(/'/g,"\\'")}')" style="margin-left:auto;background:#fee2e2;color:#dc2626;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer">删除</button>
+      </div>`;
+    }).join('');
+    return `<div class="file-section"><h4>${title}（${arr.length}）</h4>${rows}</div>`;
+  };
+  html += renderGroup('📄 文档（PDF/Word/PPT原文件）', files.doc, 'doc');
+  html += renderGroup('🖼 图片', files.image, 'image');
+  v.innerHTML = html;
+  show('files');
+}
+
+/* ===== 疾病视图 ===== */
+function renderDisease(key){
+  const d = DISEASES[key];
+  const v = document.getElementById('view-disease');
+  const section = (icon, title, items, color) => `
+    <div class="dis-section" style="border-left:4px solid ${color}">
+      <h3 style="margin:0 0 10px 0;color:${color};font-size:15px">${icon} ${title}</h3>
+      <ul style="margin:0;padding-left:20px;line-height:1.85;font-size:13.5px">
+        ${items.map(i=>`<li>${i}</li>`).join('')}
+      </ul>
+    </div>`;
+  let html = `
+    <div class="topic-title">${d.name}<span class="en">康复全流程 · 评定 · 治疗 · 并发症 · 注意事项</span></div>
+    <div style="background:linear-gradient(135deg,#eff6ff,#f0fdf4);padding:16px 20px;border-radius:10px;margin-bottom:18px;font-size:14px;line-height:1.75;border:1px solid #bfdbfe">
+      <b style="color:#1e40af">📌 疾病概述：</b>${d.overview}
+    </div>`;
+
+  // 脑卒中：注入运动治疗·中风的知识点
+  if(key==='stroke' && KP_HTML['ptstroke']){
+    html += `<h3 style="margin:16px 0 10px 0;color:#0891b2;font-size:16px;border-left:4px solid #0891b2;padding-left:10px">🏃 运动治疗·中风 核心要点</h3>
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:14px 18px;font-size:13.5px;line-height:1.8">${KP_HTML['ptstroke']}</div>`;
+    // 文献列表（直接打开原文件）
+    const strokeDocs = DOCS['运动治疗'] || [];
+    if(strokeDocs.length){
+      html += `<h3 style="margin:18px 0 8px 0;color:#7c3aed;font-size:15px;border-left:4px solid #7c3aed;padding-left:10px">📄 脑卒中相关文献（${strokeDocs.length}篇，点击直接打开原文件）</h3>
+      <div style="max-height:300px;overflow-y:auto;background:#faf5ff;border:1px solid #e9d5ff;border-radius:8px;padding:10px 14px">`;
+      strokeDocs.forEach((doc,i)=>{
+        const url = 'file:///D:/康复/KF/' + encodeURI('运动治疗') + '/' + encodeURI(doc.rel.substring('运动治疗'.length+1));
+        html += `<div style="padding:6px 0;border-bottom:1px dashed #e9d5ff;font-size:12.5px">${i+1}. <a href="${url}" style="color:#7c3aed;text-decoration:none">${doc.name}</a></div>`;
+      });
+      html += `</div>`;
+    }
+  }
+
+  if(d.stages){
+    d.stages.forEach((s,i)=>{
+      const colors = ["#dc2626","#d97706","#059669","#2563eb"];
+      const c = colors[i] || "#6b7280";
+      html += `<div style="border:1px solid ${c}33;border-left:4px solid ${c};border-radius:8px;padding:14px 18px;margin-bottom:14px;background:#fff">
+        <h3 style="margin:0 0 4px 0;color:${c};font-size:16px">阶段${i+1}：${s.phase}</h3>
+        <div style="font-size:12px;color:#666;margin-bottom:10px">📍 ${s.time}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:#fef3c740;padding:10px;border-radius:6px">
+            <b style="color:#92400e">📋 评定内容</b>
+            <ul style="margin:6px 0 0 0;padding-left:18px;line-height:1.8;font-size:13px">${s.assessment.map(a=>`<li>${a}</li>`).join('')}</ul>
+          </div>
+          <div style="background:#dcfce750;padding:10px;border-radius:6px">
+            <b style="color:#166534">🏥 治疗措施</b>
+            <ul style="margin:6px 0 0 0;padding-left:18px;line-height:1.8;font-size:13px">${s.treatment.map(t=>`<li>${t}</li>`).join('')}</ul>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  // Brunnstrom六期
+  if(d.brunnstrom){
+    html += `<h3 style="margin:20px 0 10px 0;color:#7c3aed;font-size:17px;border-left:4px solid #7c3aed;padding-left:10px">🔄 Brunnstrom偏瘫恢复六期 · 分期治疗</h3>`;
+    d.brunnstrom.forEach((b,i)=>{
+      const c = ["#dc2626","#ea580c","#ca8a04","#65a30d","#059669","#2563eb"][i];
+      html += `<div style="border:1px solid ${c}33;border-left:4px solid ${c};border-radius:8px;padding:12px 16px;margin-bottom:10px;background:#fff">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <b style="color:${c};font-size:15px">${b.stage}</b>
+          <span style="font-size:11px;color:#999">⏱ ${b.time}</span>
+        </div>
+        <div style="font-size:13px;color:#475569;margin-bottom:8px">📊 表现：${b.sign}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:#f1f5f9;padding:8px;border-radius:6px;font-size:12.5px">
+            <b style="color:#475569">评定：</b>${b.assessment.join("；")}
+          </div>
+          <div style="background:#ecfdf5;padding:8px;border-radius:6px;font-size:12.5px">
+            <b style="color:#059669">治疗：</b><ul style="margin:4px 0 0 16px;padding:0;line-height:1.7">${b.treatment.map(t=>`<li>${t}</li>`).join('')}</ul>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  // 伴随功能障碍（失语/吞咽等）
+  if(d.comorbidities){
+    html += `<h3 style="margin:20px 0 10px 0;color:#be185d;font-size:16px;border-left:4px solid #be185d;padding-left:10px">🩺 卒中常见伴随功能障碍</h3>`;
+    d.comorbidities.forEach(c=>{
+      html += `<div style="border:1px solid #fce7f3;border-left:4px solid #be185d;border-radius:8px;padding:12px 16px;margin-bottom:10px;background:#fff">
+        <b style="color:#be185d;font-size:14px">${c.name}</b>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+          <div style="background:#fdf2f8;padding:8px;border-radius:6px;font-size:12.5px">
+            <b style="color:#9d174d">📋 评定：</b><ul style="margin:4px 0 0 16px;padding:0;line-height:1.7">${c.assessment.map(a=>`<li>${a}</li>`).join('')}</ul>
+          </div>
+          <div style="background:#f0fdf4;padding:8px;border-radius:6px;font-size:12.5px">
+            <b style="color:#166534">🏥 治疗：</b><ul style="margin:4px 0 0 16px;padding:0;line-height:1.7">${c.treatment.map(t=>`<li>${t}</li>`).join('')}</ul>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  // 异常步态列表
+  if(d.gaits){
+    html += `<h3 style="margin:20px 0 10px 0;color:#0891b2;font-size:16px;border-left:4px solid #0891b2;padding-left:10px">🚶 常见异常步态一览（${d.gaits.length}种）</h3>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;background:#fff;font-size:12.5px">
+      <thead><tr style="background:#ecfeff"><th style="padding:8px;border:1px solid #bae6fd;text-align:left;width:18%">步态名称</th><th style="padding:8px;border:1px solid #bae6fd;text-align:left;width:18%">常见病因</th><th style="padding:8px;border:1px solid #bae6fd;text-align:left;width:37%">临床表现</th><th style="padding:8px;border:1px solid #bae6fd;text-align:left;width:27%">责任肌/神经</th></tr></thead><tbody>`;
+    d.gaits.forEach(g=>{
+      html += `<tr>
+        <td style="padding:8px;border:1px solid #e2e8f0;font-weight:600;color:#0891b2">${g.name}</td>
+        <td style="padding:8px;border:1px solid #e2e8f0;color:#dc2626">${g.cause}</td>
+        <td style="padding:8px;border:1px solid #e2e8f0">${g.sign}</td>
+        <td style="padding:8px;border:1px solid #e2e8f0;color:#059669">${g.muscle}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+  if(d.assessment){
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px">
+      ${section('📋','康复评定方法',d.assessment,'#2563eb')}
+      ${section('🏥','康复治疗方法',d.treatment,'#059669')}
+      ${section('⚠️','并发症及预防',d.complications,'#dc2626')}
+      ${section('📝','注意事项与禁忌',d.notes,'#d97706')}
+    </div>`;
+  }
+
+  if(d.refs && d.refs.length){
+    html += `<div style="margin-top:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px">
+      <b style="color:#475569;font-size:14px">📚 参考文献与指南依据</b>
+      <ul style="margin:8px 0 0 0;padding-left:20px;font-size:12.5px;line-height:1.9;color:#475569">`;
+    d.refs.forEach(r=>{
+      const link = r.url ? `<a href="${r.url}" target="_blank" style="color:#2563eb">${r.title} ↗</a>` : `<b>${r.title}</b>`;
+      html += `<li>${link} <span style="color:#94a3b8">— ${r.author}</span></li>`;
+    });
+    html += `</ul></div>`;
+  }
+
+  v.innerHTML = html;
+  show('disease');
+}
+
+/* ===== 神经评定视图 ===== */
+function renderNeuro(){
+  const v = document.getElementById('view-neuro');
+  let html = `<div class="topic-title">🧠 神经评定与定位诊断<span class="en">脑神经 · 周围神经损伤定位 · 特殊体征 · 反射节段</span></div>`;
+
+  // 1. 十二对脑神经
+  const c = NEURO.cranial;
+  html += `<h3 style="margin:16px 0 10px 0;color:#7c3aed;font-size:16px;border-left:4px solid #7c3aed;padding-left:10px">${c.name}</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff">
+    <thead><tr style="background:#ede9fe"><th style="padding:8px;text-align:left;width:18%">脑神经</th><th style="padding:8px;text-align:left;width:42%">检查方法</th><th style="padding:8px;text-align:left;width:40%">异常表现与定位</th></tr></thead>
+    <tbody>${c.items.map(i=>`<tr style="border-bottom:1px solid #f1f5f9">
+      <td style="padding:8px;font-weight:600;color:#7c3aed">${i.n}</td>
+      <td style="padding:8px">${i.test}</td>
+      <td style="padding:8px;color:#475569">${i.abnormal}</td>
+    </tr>`).join('')}</tbody></table>`;
+
+  // 2. 上肢周围神经
+  const u = NEURO.peripheral;
+  html += `<h3 style="margin:22px 0 10px 0;color:#0891b2;font-size:16px;border-left:4px solid #0891b2;padding-left:10px">${u.name}</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff">
+    <thead><tr style="background:#cffafe"><th style="padding:8px;text-align:left;width:20%">神经(节段)</th><th style="padding:8px;text-align:left;width:28%">支配肌肉</th><th style="padding:8px;text-align:left;width:32%">典型表现/畸形</th><th style="padding:8px;text-align:left;width:20%">检查试验</th></tr></thead>
+    <tbody>${u.items.map(i=>`<tr style="border-bottom:1px solid #f1f5f9">
+      <td style="padding:8px;font-weight:600;color:#0891b2">${i.nerve}</td>
+      <td style="padding:8px">${i.muscle}</td>
+      <td style="padding:8px;color:#dc2626">${i.sign}</td>
+      <td style="padding:8px;color:#475569">${i.test}</td>
+    </tr>`).join('')}</tbody></table>`;
+
+  // 3. 下肢周围神经
+  const l = NEURO.lower_neuro;
+  html += `<h3 style="margin:22px 0 10px 0;color:#059669;font-size:16px;border-left:4px solid #059669;padding-left:10px">${l.name}</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff">
+    <thead><tr style="background:#d1fae5"><th style="padding:8px;text-align:left;width:20%">神经(节段)</th><th style="padding:8px;text-align:left;width:28%">支配肌肉</th><th style="padding:8px;text-align:left;width:32%">典型表现/畸形</th><th style="padding:8px;text-align:left;width:20%">检查试验</th></tr></thead>
+    <tbody>${l.items.map(i=>`<tr style="border-bottom:1px solid #f1f5f9">
+      <td style="padding:8px;font-weight:600;color:#059669">${i.nerve}</td>
+      <td style="padding:8px">${i.muscle}</td>
+      <td style="padding:8px;color:#dc2626">${i.sign}</td>
+      <td style="padding:8px;color:#475569">${i.test}</td>
+    </tr>`).join('')}</tbody></table>`;
+
+  // 4. 特殊体征
+  const s = NEURO.signs;
+  html += `<h3 style="margin:22px 0 10px 0;color:#dc2626;font-size:16px;border-left:4px solid #dc2626;padding-left:10px">${s.name}</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff">
+    <thead><tr style="background:#fee2e2"><th style="padding:8px;text-align:left;width:22%">体征名称</th><th style="padding:8px;text-align:left;width:38%">检查方法</th><th style="padding:8px;text-align:left;width:40%">阳性意义/定位</th></tr></thead>
+    <tbody>${s.items.map(i=>`<tr style="border-bottom:1px solid #f1f5f9">
+      <td style="padding:8px;font-weight:600;color:#dc2626">${i.sign}</td>
+      <td style="padding:8px">${i.test}</td>
+      <td style="padding:8px;color:#475569">${i.positive}</td>
+    </tr>`).join('')}</tbody></table>`;
+
+  // 5. 反射节段
+  const r = NEURO.reflexes;
+  html += `<h3 style="margin:22px 0 10px 0;color:#d97706;font-size:16px;border-left:4px solid #d97706;padding-left:10px">${r.name}</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff">
+    <thead><tr style="background:#fef3c7"><th style="padding:8px;text-align:left;width:25%">反射名称</th><th style="padding:8px;text-align:left;width:20%">脊髓节段</th><th style="padding:8px;text-align:left;width:30%">检查方法</th><th style="padding:8px;text-align:left;width:25%">正常反应</th></tr></thead>
+    <tbody>${r.items.map(i=>`<tr style="border-bottom:1px solid #f1f5f9">
+      <td style="padding:8px;font-weight:600;color:#d97706">${i.reflex}</td>
+      <td style="padding:8px;color:#7c3aed;font-weight:600">${i.root}</td>
+      <td style="padding:8px">${i.method}</td>
+      <td style="padding:8px;color:#475569">${i.normal}</td>
+    </tr>`).join('')}</tbody></table>`;
+
+  // 参考文献
+  html += `<div style="margin-top:20px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px">
+    <b style="color:#475569;font-size:13px">📚 参考来源</b>
+    <ul style="margin:6px 0 0 0;padding-left:20px;font-size:12px;line-height:1.9;color:#64748b">
+      <li>《神经病学》(第8版) · 人民卫生出版社 · 贾建平、陈生弟主编</li>
+      <li>《康复评定学》(第2版) · 人民卫生出版社 · 王玉龙主编</li>
+      <li>《骨科康复学》· 人民卫生出版社 · 燕铁斌主编</li>
+    </ul></div>`;
+
+  v.innerHTML = html;
+  show('neuro');
+}
+
+/* ===== 评定量表视图 ===== */
+function renderScales(){
+  const v = document.getElementById('view-scales');
+  const cats = {
+    balance:   {icon:'⚖️', color:'#0891b2', bg:'#ecfeff', border:'#06b6d4'},
+    motor:     {icon:'💪', color:'#059669', bg:'#ecfdf5', border:'#10b981'},
+    adl:       {icon:'🏠', color:'#d97706', bg:'#fffbeb', border:'#f59e0b'},
+    pain:      {icon:'🩺', color:'#dc2626', bg:'#fef2f2', border:'#ef4444'},
+    neuro:     {icon:'🧠', color:'#7c3aed', bg:'#f5f3ff', border:'#8b5cf6'}
+  };
+  let html = `<div class="topic-title">📏 康复评定量表速查<span class="en">常用量表评分方法 · 临界值 · 临床意义</span></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+    ${Object.entries(SCALES).map(([k,g])=>{const c=cats[k];return `<span style="background:${c.bg};color:${c.color};padding:6px 14px;border-radius:20px;font-size:12.5px;border:1px solid ${c.border}33">${c.icon} ${g.name} · ${g.items.length}个</span>`}).join('')}
+  </div>`;
+  for(const [k, g] of Object.entries(SCALES)){
+    const c = cats[k];
+    html += `<h3 style="margin:20px 0 12px 0;color:${c.color};font-size:17px;border-left:4px solid ${c.color};padding-left:12px">${c.icon} ${g.name}</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px">`;
+    g.items.forEach(it=>{
+      const openLink = it.file ? `<a href="file:///D:/康复/KF/康复评定/${encodeURI(it.file)}" style="display:inline-block;background:${c.bg};color:${c.color};padding:3px 10px;border-radius:12px;font-size:11.5px;text-decoration:none;margin-top:8px">📎 打开原文件</a>` : '';
+      html += `<div style="background:#fff;border:1px solid #e2e8f0;border-top:3px solid ${c.color};border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);transition:transform .15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+        <div style="font-weight:700;color:#0f172a;font-size:14.5px;margin-bottom:6px">${it.name}</div>
+        <div style="font-size:12.8px;color:#475569;line-height:1.75">${it.desc}</div>
+        ${openLink}
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  html += `<div style="margin-top:24px;background:linear-gradient(135deg,#f8fafc,#e2e8f0);border-radius:10px;padding:16px 20px;font-size:12.5px;color:#64748b;text-align:center">
+    📚 参考：《康复评定学》(第2版) 人民卫生出版社 · 王玉龙主编 · 点击卡片右上角链接可打开Word量表
+  </div>`;
+  v.innerHTML = html;
+  show('scales');
+}
+
+/* ===== 我的分享（图片+视频，存IndexedDB） ===== */
+let shareDB = null;
+function openShareDB(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open('shareDB', 1);
+    req.onupgradeneeded = e=>{
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains('items')) db.createObjectStore('items', {keyPath:'id', autoIncrement:true});
+    };
+    req.onsuccess = e=>{ shareDB = e.target.result; resolve(shareDB); };
+    req.onerror = e=>reject(e);
+  });
+}
+function dbAddItem(item){
+  return new Promise((resolve, reject)=>{
+    const tx = shareDB.transaction('items','readwrite');
+    tx.objectStore('items').add(item);
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = e=>reject(e);
+  });
+}
+function dbGetAll(){
+  return new Promise((resolve, reject)=>{
+    const tx = shareDB.transaction('items','readonly');
+    const req = tx.objectStore('items').getAll();
+    req.onsuccess = ()=>resolve(req.result||[]);
+    req.onerror = e=>reject(e);
+  });
+}
+function dbDeleteItem(id){
+  return new Promise((resolve, reject)=>{
+    const tx = shareDB.transaction('items','readwrite');
+    tx.objectStore('items').delete(id);
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = e=>reject(e);
+  });
+}
+function dbClear(){
+  return new Promise((resolve, reject)=>{
+    const tx = shareDB.transaction('items','readwrite');
+    tx.objectStore('items').clear();
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = e=>reject(e);
+  });
+}
+let shareItems = [];
+async function renderShare(){
+  if(!shareDB) await openShareDB();
+  shareItems = await dbGetAll();
+  const v = document.getElementById('view-share');
+  let html = `
+    <div class="topic-title">📸 我的分享<span class="en">上传图片/视频，存在本机浏览器里</span></div>
+    <div style="background:#fff7ed;padding:14px 18px;border-radius:8px;margin-bottom:16px;font-size:13.5px;line-height:1.7;color:#9a3412">
+      <b>使用说明：</b>点下面按钮选本地图片或视频，自动存在这个浏览器里（下次打开还在）。
+      <br>图片单张≤5MB，视频单段≤100MB。点"导出分享版HTML"把图片打包成网页发别人看；视频太大不嵌入HTML，会单独导出视频文件。
+    </div>
+    <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <label style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px">
+        📷 图片/视频上传
+        <input type="file" accept="image/*,video/*" multiple style="display:none" id="share-file">
+      </label>
+      <label style="background:#7c3aed;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px">
+        📄 我的文献(PDF/Word)
+        <input type="file" accept=".pdf,.doc,.docx" multiple style="display:none" id="share-pdf">
+      </label>
+      <button onclick="exportShareHTML()" style="background:#059669;color:#fff;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:14px">📦 导出分享版</button>
+      <button onclick="clearShare()" style="background:#dc2626;color:#fff;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:14px">🗑 清空全部</button>
+    </div>
+    <div id="share-wall" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+  `;
+  if(shareItems.length===0){
+    html += `<div style="grid-column:1/-1;text-align:center;padding:60px;color:#999">还没有上传，点上面按钮开始</div>`;
+  } else {
+    for(const it of shareItems){
+      const url = URL.createObjectURL(it.blob);
+      const isDoc = it.name.endsWith('.pdf') || it.name.endsWith('.doc') || it.name.endsWith('.docx');
+      const media = isDoc
+        ? `<div style="width:100%;height:140px;background:linear-gradient(135deg,#fef3c7,#fde68a);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:40px;cursor:pointer" onclick="window.open('${url}','_blank')">📄</div>`
+        : it.type.startsWith('video/')
+        ? `<video src="${url}" controls style="width:100%;height:140px;object-fit:cover;background:#000"></video>`
+        : `<img src="${url}" style="width:100%;height:140px;object-fit:cover;cursor:pointer" onclick="window.open('${url}','_blank')">`;
+      html += `
+        <div style="background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;position:relative">
+          ${media}
+          <div style="padding:8px;font-size:12px;color:#666;word-break:break-all">${it.name} <span style="color:#999">(${(it.blob.size/1024/1024).toFixed(1)}MB)</span></div>
+          <button onclick="delShare(${it.id})" style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,.9);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer">×</button>
+        </div>`;
+    }
+  }
+  html += `</div>`;
+  v.innerHTML = html;
+  show('share');
+  updateShareCount();
+  document.getElementById('share-file').onchange = async e=>{
+    const files = Array.from(e.target.files);
+    for(const f of files){
+      const isImg = f.type.startsWith('image/');
+      const isVid = f.type.startsWith('video/');
+      if(!isImg && !isVid) continue;
+      if(isImg && f.size > 5*1024*1024){ alert(`图片 ${f.name} 超过5MB，跳过`); continue; }
+      if(isVid && f.size > 100*1024*1024){ alert(`视频 ${f.name} 超过100MB，跳过`); continue; }
+      await dbAddItem({name:f.name, type:f.type, blob:f, time:Date.now()});
+    }
+    renderShare();
+  };
+  document.getElementById('share-pdf').onchange = async e=>{
+    const files = Array.from(e.target.files);
+    for(const f of files){
+      await dbAddItem({name:f.name, type:f.type, blob:f, time:Date.now()});
+    }
+    renderShare();
+  };
+}
+async function delShare(id){
+  if(!confirm('删除这个文件？')) return;
+  await dbDeleteItem(id);
+  renderShare();
+}
+async function clearShare(){
+  if(!confirm('确定清空全部？不可恢复')) return;
+  await dbClear();
+  renderShare();
+}
+async function exportShareHTML(){
+  const items = await dbGetAll();
+  if(items.length===0){ alert('还没有文件'); return; }
+  // 图片转base64嵌入，视频提示单独导出
+  const imgs = items.filter(i=>i.type.startsWith('image/'));
+  const vids = items.filter(i=>i.type.startsWith('video/'));
+  let imgHtml = '';
+  for(const it of imgs){
+    const b64 = await new Promise(res=>{
+      const r = new FileReader();
+      r.onload = ()=>res(r.result);
+      r.readAsDataURL(it.blob);
+    });
+    imgHtml += `<figure style="display:inline-block;margin:8px;text-align:center">
+      <img src="${b64}" style="max-width:320px;max-height:240px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.15)">
+      <figcaption style="font-size:12px;color:#666;margin-top:4px">${it.name}</figcaption></figure>`;
+  }
+  let note = '';
+  if(vids.length>0){
+    note = `<p style="color:#9a3412;background:#fff7ed;padding:10px;border-radius:6px">⚠️ 有 ${vids.length} 个视频未嵌入HTML（太大）。请把视频文件单独发给好友，和这个HTML放同一文件夹，改名为 video1.mp4 等即可。</p>`;
+  }
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>我的分享 · ${imgs.length}图${vids.length}视频</title>
+  <style>body{font-family:sans-serif;max-width:900px;margin:30px auto;padding:0 20px;background:#f8fafc}
+  h1{color:#2563eb}</style></head><body>
+  <h1>📸 我的分享</h1><p style="color:#666">共${imgs.length}张图片${vids.length}个视频</p>${note}<div>${imgHtml}</div></body></html>`;
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '我的分享.html';
+  a.click();
+  if(vids.length>0){
+    alert(`已导出HTML。还有${vids.length}个视频文件太大，请到"我的分享"页手动复制视频文件发给好友。`);
+  }
+}
+function updateShareCount(){
+  const n = shareItems.length;
+  const cnt = document.querySelector('.nav-group:last-child .cnt');
+  if(cnt) cnt.textContent = n;
+}
+
+/* ===== 解剖与肌肉视图 ===== */
+function renderMuscle(region){
+  const v = document.getElementById('view-muscle');
+  const regions = ['上肢','下肢','躯干'];
+  const tabs = regions.map(r=>`<button onclick="renderMuscle('${r}')" style="${region===r?'background:#2563eb;color:#fff':'background:#f1f5f9;color:#475569'};border:none;padding:6px 16px;margin-right:6px;border-radius:6px;cursor:pointer;font-size:13px">${r}</button>`).join('');
+  const list = region ? MUSCLES.filter(m=>m.region===region) : MUSCLES;
+  let html = `<div class="topic-title">🦴 解剖与肌肉 · 康复常用${list.length}块<span class="en">起止点 / 作用 / 神经支配 / MMT检查体位</span></div>
+  <div style="margin:10px 0 16px">${tabs}<button onclick="renderMuscle('')" style="${!region?'background:#2563eb;color:#fff':'background:#f1f5f9;color:#475569'};border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px">全部</button></div>`;
+  const groups = {};
+  list.forEach(m=>{
+    if(!groups[m.group]) groups[m.group] = [];
+    groups[m.group].push(m);
+  });
+  for(const [g, items] of Object.entries(groups)){
+    html += `<h3 style="margin:16px 0 8px;color:#1e40af;font-size:15px;border-left:4px solid #2563eb;padding-left:10px">${g}（${items.length}块）</h3>`;
+    html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;background:#fff;font-size:12.5px">
+      <thead><tr style="background:#eff6ff">
+        <th style="padding:6px;border:1px solid #dbeafe;text-align:left">肌肉</th>
+        <th style="padding:6px;border:1px solid #dbeafe;text-align:left">起点</th>
+        <th style="padding:6px;border:1px solid #dbeafe;text-align:left">止点</th>
+        <th style="padding:6px;border:1px solid #dbeafe;text-align:left">作用</th>
+        <th style="padding:6px;border:1px solid #dbeafe;text-align:left">神经支配</th>
+        <th style="padding:6px;border:1px solid #dbeafe;text-align:left">MMT检查</th>
+      </tr></thead><tbody>`;
+    items.forEach(m=>{
+      html += `<tr>
+        <td style="padding:6px;border:1px solid #e5e7eb;font-weight:600;color:#1e40af">${m.name}</td>
+        <td style="padding:6px;border:1px solid #e5e7eb">${m.origin}</td>
+        <td style="padding:6px;border:1px solid #e5e7eb">${m.insertion}</td>
+        <td style="padding:6px;border:1px solid #e5e7eb">${m.action}</td>
+        <td style="padding:6px;border:1px solid #e5e7eb;color:#059669">${m.nerve}</td>
+        <td style="padding:6px;border:1px solid #e5e7eb;color:#92400e">${m.mmt}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+  v.innerHTML = html;
+  show('muscle');
+}
+
+/* ===== 搜索 ===== */
+const searchBox = document.getElementById('search');
+searchBox.addEventListener('input', e=>{
+  const q = e.target.value.trim().toLowerCase();
+  if(!q){ document.querySelector('.nav-group.open')||null; renderHome(); show('home'); return; }
+  const v = document.getElementById('view-search');
+  let hits = [];
+  // 搜知识点精讲
+  TOPICS.forEach(t=>{
+    const kpHtml = KP_HTML[t.id]||'';
+    if(kpHtml.toLowerCase().includes(q)){
+      hits.push({type:'kp', topic:t.id, title:t.name+' · 知识点精讲', snippet:kpHtml.replace(/<[^>]+>/g,' ').slice(0,100)});
+    }
+  });
+  // 搜文档
+  TOPICS.forEach(t=>{
+    (DOCS[t.dir]||[]).forEach((d,i)=>{
+      if(d.name.toLowerCase().includes(q) || d.text.toLowerCase().includes(q)){
+        const idx = d.text.toLowerCase().indexOf(q);
+        const ctx = idx>=0 ? d.text.slice(Math.max(0,idx-40), idx+80).replace(/\s+/g,' ') : d.text.slice(0,80).replace(/\s+/g,' ');
+        hits.push({type:'doc', topic:t.id, idx, title:d.name, snippet:ctx});
+      }
+    });
+  });
+  let html = `<div class="topic-title">搜索：「${e.target.value}」· ${hits.length} 个结果</div>`;
+  hits.slice(0,50).forEach(h=>{
+    html += `<div class="search-hit" onclick="${h.type==='doc'?`openDoc('${h.topic}',${h.idx})`:`renderKP('${h.topic}')`}">
+      <div class="t">${h.title}</div>
+      <div class="s">${h.snippet}…</div></div>`;
+  });
+  if(hits.length===0) html += '<p style="color:var(--muted);padding:30px;text-align:center">无匹配结果</p>';
+  v.innerHTML = html;
+  show('search');
+});
+
+/* ===== 左侧导航点击 ===== */
+document.addEventListener('click', e=>{
+  const sub = e.target.closest('.nav-sub');
+  if(!sub) return;
+  document.querySelectorAll('.nav-sub').forEach(s=>s.classList.remove('active'));
+  sub.classList.add('active');
+  const view = sub.dataset.view;
+  const top = sub.dataset.top;
+  if(view==='kp') renderKP(top);
+  else if(view==='docs-list') renderDocsList(top);
+  else if(view==='files') renderFiles(top);
+  else if(view==='disease') renderDisease(sub.dataset.disease);
+  else if(view==='share') renderShare();
+  else if(view==='muscle') renderMuscle(sub.dataset.region);
+  if(window.innerWidth<=900) document.querySelector('aside').classList.remove('show');
+});
+
+/* ===== 启动 ===== */
+renderHome();
+</script>
+</body>
+</html>
